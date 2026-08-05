@@ -750,6 +750,61 @@
       text-transform: uppercase;
       letter-spacing: 1px;
     }
+
+    /* Player Name Input Field Styling */
+    .name-input-container {
+      margin: 15px 0;
+      text-align: center;
+      width: 100%;
+      max-width: 320px;
+      z-index: 20;
+    }
+
+    .name-input-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #638581;
+      margin-bottom: 8px;
+      display: block;
+      font-weight: 700;
+    }
+
+    .name-input-field {
+      width: 100%;
+      background: rgba(10, 35, 32, 0.7);
+      border: 2px solid rgba(0, 255, 102, 0.3);
+      border-radius: 10px;
+      padding: 12px 20px;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      text-align: center;
+      letter-spacing: 1.5px;
+      outline: none;
+      transition: all 0.25s ease;
+      text-transform: uppercase;
+    }
+
+    .name-input-field:focus {
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
+      background: rgba(15, 45, 42, 0.9);
+    }
+
+    /* HUD and Modal Badges for Player Name */
+    .hud-player-name {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--neon-cyan);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      text-shadow: var(--cyan-glow);
+      background: rgba(0, 243, 255, 0.1);
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid rgba(0, 243, 255, 0.2);
+    }
   </style>
 </head>
 <body>
@@ -765,6 +820,12 @@
       <div class="title-container">
         <h1 class="title-logo">plo<span>.io</span></h1>
         <div class="subtitle">Geometry Wave Runner</div>
+      </div>
+
+      <!-- Player Name Input Container -->
+      <div class="name-input-container">
+        <label for="player-name-field" class="name-input-label">Enter Nickname</label>
+        <input type="text" id="player-name-field" class="name-input-field" placeholder="NEON_WAVE" maxlength="15" value="NEON_WAVE">
       </div>
 
       <div class="cards-container">
@@ -841,6 +902,8 @@
       <div class="hud-top">
         <button class="hud-btn pause-btn" onclick="pauseGame()">⏸</button>
 
+        <div id="hud-player-name" class="hud-player-name">NEON_WAVE</div>
+
         <div class="hud-center-info">
           <div id="hud-level-text" class="hud-level-indicator">Level 1</div>
           <div class="progress-container">
@@ -883,6 +946,10 @@
         <h2 class="modal-title">Paused</h2>
         <div class="modal-stats">
           <div class="stat-line">
+            <span>Player</span>
+            <span id="pause-player-val" class="val">NEON_WAVE</span>
+          </div>
+          <div class="stat-line">
             <span>Current Progress</span>
             <span id="pause-progress-val" class="val">0%</span>
           </div>
@@ -905,6 +972,10 @@
         <h2 class="modal-title fail">Crashed</h2>
         <div class="modal-stats">
           <div class="stat-line">
+            <span>Player</span>
+            <span id="fail-player-val" class="val">NEON_WAVE</span>
+          </div>
+          <div class="stat-line">
             <span>Final Progress</span>
             <span id="fail-progress-val" class="val">0%</span>
           </div>
@@ -925,6 +996,10 @@
       <div class="modal-content" style="border-color: var(--neon-cyan); box-shadow: 0 10px 30px rgba(0, 243, 255, 0.2);">
         <h2 class="modal-title win">Cleared!</h2>
         <div class="modal-stats">
+          <div class="stat-line">
+            <span>Player</span>
+            <span id="win-player-val" class="val">NEON_WAVE</span>
+          </div>
           <div class="stat-line">
             <span>Completed Mode</span>
             <span id="win-mode-val" class="val">Level 1</span>
@@ -957,6 +1032,7 @@
     let currentLevel = 1;
     let attemptCount = 1;
     let isMuted = false;
+    let playerName = 'NEON_WAVE';
 
     // Canvas scaling and dimensions
     const canvas = document.getElementById('gameCanvas');
@@ -1039,6 +1115,7 @@
       initCanvas();
       createHexagonPattern();
       initInputListeners();
+      initPlayerNameListener();
       loadSavedData();
       renderLevelGrid();
 
@@ -1050,6 +1127,22 @@
     });
 
     window.addEventListener('resize', initCanvas);
+
+    // Initialize the input listener for player name
+    function initPlayerNameListener() {
+      const nameField = document.getElementById('player-name-field');
+      if (nameField) {
+        nameField.addEventListener('input', (e) => {
+          let val = e.target.value.trim().toUpperCase();
+          if (!val) {
+            playerName = 'NEON_WAVE';
+          } else {
+            playerName = val.replace(/[^A-Z0-9_]/g, ''); // alphanumeric and underscores only
+          }
+          localStorage.setItem('plo_io_player_name', playerName);
+        });
+      }
+    }
 
     function initCanvas() {
       // Setup scaled dimensions preserving a 16:9 virtual ratio
@@ -1121,6 +1214,11 @@
     function initInputListeners() {
       // Keyboard listeners
       window.addEventListener('keydown', (e) => {
+        // Avoid gameplay actions if typing in an input field
+        if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
+          return;
+        }
+
         if (e.code === 'Space') {
           inputs.space = true;
           e.preventDefault();
@@ -1139,6 +1237,10 @@
       });
 
       window.addEventListener('keyup', (e) => {
+        if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
+          return;
+        }
+
         if (e.code === 'Space') {
           inputs.space = false;
         }
@@ -1150,6 +1252,10 @@
 
       // Pointer (Mouse / Touch) listeners
       window.addEventListener('mousedown', (e) => {
+        if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
+          return;
+        }
+
         if (e.button === 0) { // Left click
           inputs.pointer = true;
           updateInputActiveState();
@@ -1157,13 +1263,15 @@
       });
 
       window.addEventListener('mouseup', (e) => {
-        if (e.button === 0) {
-          inputs.pointer = false;
-          updateInputActiveState();
-        }
+        inputs.pointer = false;
+        updateInputActiveState();
       });
 
       window.addEventListener('touchstart', (e) => {
+        if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
+          return;
+        }
+
         // Prevent default zoom or scroll on game container
         if (e.target.closest('#game-container')) {
           inputs.pointer = true;
@@ -1184,6 +1292,14 @@
     // --- LOCAL STORAGE STATE ---
     function loadSavedData() {
       try {
+        // Player name load
+        const savedName = localStorage.getItem('plo_io_player_name');
+        if (savedName) {
+          playerName = savedName;
+          const nameField = document.getElementById('player-name-field');
+          if (nameField) nameField.value = playerName;
+        }
+
         const savedProgress = localStorage.getItem(SAVE_CLASSIC_PROGRESS);
         if (!savedProgress) {
           const defaultProgress = {};
@@ -1369,6 +1485,7 @@
       currentLevel = lvlNum;
       attemptCount = 1; // resets or increments handled on death
 
+      updatePlayerNameHUDandModals();
       initGameElements();
       setGameState(STATE_PLAYING);
     }
@@ -1377,6 +1494,7 @@
       currentGameMode = 'endless';
       attemptCount = 1;
 
+      updatePlayerNameHUDandModals();
       initGameElements();
       setGameState(STATE_PLAYING);
     }
@@ -1385,8 +1503,22 @@
       currentGameMode = 'race';
       attemptCount = 1;
 
+      updatePlayerNameHUDandModals();
       initGameElements();
       setGameState(STATE_PLAYING);
+    }
+
+    function updatePlayerNameHUDandModals() {
+      // Dynamic rendering of player's customized name to the UI badges on startup
+      const nameField = document.getElementById('player-name-field');
+      if (nameField) {
+        let val = nameField.value.trim().toUpperCase();
+        playerName = val ? val.replace(/[^A-Z0-9_]/g, '') : 'NEON_WAVE';
+      }
+      document.getElementById('hud-player-name').innerText = playerName;
+      document.getElementById('pause-player-val').innerText = playerName;
+      document.getElementById('fail-player-val').innerText = playerName;
+      document.getElementById('win-player-val').innerText = playerName;
     }
 
     // --- PLAYER PHYSICS & PARTICLE SYSTEMS ---
@@ -1661,146 +1793,167 @@
       levelProgress = 0;
 
       if (currentGameMode === 'classic') {
-        levelLength = 4000 + (currentLevel * 1000); // Level 1 is 5000px, level 10 is 14000px
+        levelLength = 4000 + (currentLevel * 1000); // Level 1 is 5000px, level 5 is 9000px
 
-        // Classic mode features deterministic, fun course designs
-        // Place start portal indicator
+        // Classic mode features deterministic, fun, distinct handcrafted level designs (Levels 1 to 5)
         createLevelGates();
 
-        // Procedural course based on level difficulty (higher level = denser obstacles)
-        let cursorX = 600;
-        const seed = currentLevel * 12345;
-        let randomVal = Math.sin(seed) * 10000;
+        if (currentLevel === 1) {
+          // LEVEL 1: Introduction to Waves (Gentle spacing, floor obstacles)
+          obstacles.push({ type: 'spike', x: 600, y: height - 40, width: 40, height: 48, dir: -1, color: 'rgba(255, 0, 102, 0.85)' });
+          obstacles.push({ type: 'spike', x: 1000, y: 40, width: 40, height: 48, dir: 1, color: 'rgba(255, 0, 102, 0.85)' });
 
-        const getRand = () => {
-          randomVal = Math.sin(randomVal) * 10000;
-          return randomVal - Math.floor(randomVal);
-        };
+          obstacles.push({ type: 'block', x: 1400, y: 40, width: 100, height: 180, color: 'rgba(0, 243, 255, 0.85)' });
+          obstacles.push({ type: 'block', x: 1400, y: height - 220, width: 100, height: 180, color: 'rgba(0, 243, 255, 0.85)' });
 
-        while (cursorX < levelLength - 800) {
-          const typeRoll = getRand();
+          obstacles.push({ type: 'spike', x: 1900, y: height - 40, width: 40, height: 48, dir: -1, color: 'rgba(255, 0, 102, 0.85)' });
+          obstacles.push({ type: 'spike', x: 1945, y: height - 40, width: 40, height: 48, dir: -1, color: 'rgba(255, 0, 102, 0.85)' });
 
-          if (typeRoll < 0.3) {
-            // Ceiling or floor spike cluster
-            const count = Math.floor(getRand() * 3) + 1;
-            const isCeiling = getRand() < 0.5;
-            const spacing = 45;
+          obstacles.push({ type: 'block', x: 2400, y: 200, width: 120, height: 100, color: 'rgba(0, 255, 102, 0.85)' });
 
-            for (let i = 0; i < count; i++) {
-              obstacles.push({
-                type: 'spike',
-                x: cursorX + i * spacing,
-                y: isCeiling ? 40 : height - 40,
-                width: 40,
-                height: 48,
-                dir: isCeiling ? 1 : -1, // 1 for pointing down from ceiling, -1 pointing up from floor
-                color: 'rgba(255, 0, 102, 0.85)' // glowing neon pink
-              });
-            }
-            cursorX += count * spacing + 250;
+          obstacles.push({ type: 'spike', x: 2900, y: 40, width: 40, height: 48, dir: 1, color: 'rgba(255, 0, 102, 0.85)' });
+          obstacles.push({ type: 'spike', x: 3300, y: height - 40, width: 40, height: 48, dir: -1, color: 'rgba(255, 0, 102, 0.85)' });
 
-          } else if (typeRoll < 0.6) {
-            // Horizontal pillars / corridor gaps (Block Dropouts)
-            const gapY = 150 + getRand() * 250; // gap height center
-            const gapHeight = Math.max(160, 260 - (currentLevel * 10)); // narrower gap on harder levels
+          obstacles.push({ type: 'block', x: 3700, y: 40, width: 80, height: 220, color: 'rgba(0, 243, 255, 0.85)' });
+          obstacles.push({ type: 'block', x: 3700, y: height - 220, width: 80, height: 180, color: 'rgba(0, 243, 255, 0.85)' });
 
-            // Top block
-            obstacles.push({
-              type: 'block',
-              x: cursorX,
-              y: 40,
-              width: 70 + getRand() * 90,
-              height: gapY - gapHeight / 2 - 40,
-              color: 'rgba(0, 243, 255, 0.85)' // neon cyan blocks
-            });
+        } else if (currentLevel === 2) {
+          // LEVEL 2: Double Sided Spikes (Alternating ceiling and floor challenges)
+          obstacles.push({ type: 'spike', x: 600, y: height - 40, width: 40, height: 48, dir: -1, color: 'rgba(255, 0, 102, 0.85)' });
+          obstacles.push({ type: 'spike', x: 800, y: 40, width: 40, height: 48, dir: 1, color: 'rgba(255, 0, 102, 0.85)' });
 
-            // Bottom block
-            obstacles.push({
-              type: 'block',
-              x: cursorX,
-              y: gapY + gapHeight / 2,
-              width: 70 + getRand() * 90,
-              height: (height - 40) - (gapY + gapHeight / 2),
-              color: 'rgba(0, 243, 255, 0.85)'
-            });
+          obstacles.push({ type: 'block', x: 1100, y: 250, width: 150, height: 80, color: 'rgba(0, 255, 102, 0.85)' });
+          obstacles.push({ type: 'spike', x: 1150, y: 250, width: 32, height: 36, dir: 1, color: 'rgba(255, 0, 102, 0.85)' });
 
-            // Maybe a surprise spike inside the corridor
-            if (getRand() < 0.5 && currentLevel > 2) {
-              obstacles.push({
-                type: 'spike',
-                x: cursorX + 20,
-                y: gapY + gapHeight / 2 - 2,
-                width: 32,
-                height: 36,
-                dir: -1,
-                color: 'rgba(255, 0, 102, 0.85)'
-              });
-            }
-            cursorX += 300;
+          obstacles.push({ type: 'spike', x: 1500, y: height - 40, width: 40, height: 48, dir: -1, color: 'rgba(255, 0, 102, 0.85)' });
+          obstacles.push({ type: 'spike', x: 1545, y: height - 40, width: 40, height: 48, dir: -1, color: 'rgba(255, 0, 102, 0.85)' });
 
-          } else if (typeRoll < 0.8) {
-            // Floating center blocks / diamonds
-            const blockY = 180 + getRand() * 250;
-            const blockW = 80 + getRand() * 120;
-            const blockH = 60 + getRand() * 80;
+          obstacles.push({ type: 'block', x: 1900, y: 40, width: 90, height: 260, color: 'rgba(0, 243, 255, 0.85)' });
+          obstacles.push({ type: 'block', x: 1900, y: height - 180, width: 90, height: 140, color: 'rgba(0, 243, 255, 0.85)' });
 
-            obstacles.push({
-              type: 'block',
-              x: cursorX,
-              y: blockY,
-              width: blockW,
-              height: blockH,
-              color: 'rgba(0, 255, 102, 0.85)' // neon green block
-            });
+          obstacles.push({ type: 'spike', x: 2300, y: 40, width: 40, height: 48, dir: 1, color: 'rgba(255, 0, 102, 0.85)' });
+          obstacles.push({ type: 'spike', x: 2345, y: 40, width: 40, height: 48, dir: 1, color: 'rgba(255, 0, 102, 0.85)' });
 
-            // Spikes on top/bottom of floating block on harder levels
-            if (currentLevel > 4) {
-              if (getRand() < 0.5) {
-                obstacles.push({
-                  type: 'spike',
-                  x: cursorX + blockW / 2 - 16,
-                  y: blockY,
-                  width: 32,
-                  height: 36,
-                  dir: 1, // pointing down
-                  color: 'rgba(255, 0, 102, 0.85)'
-                });
-              } else {
-                obstacles.push({
-                  type: 'spike',
-                  x: cursorX + blockW / 2 - 16,
-                  y: blockY + blockH,
-                  width: 32,
-                  height: 36,
-                  dir: -1, // pointing up
-                  color: 'rgba(255, 0, 102, 0.85)'
-                });
-              }
-            }
-            cursorX += blockW + 280;
+          obstacles.push({ type: 'block', x: 2700, y: 150, width: 140, height: 300, color: 'rgba(0, 255, 102, 0.85)' });
 
-          } else {
-            // Giant diagonal slalom passage (diagonal corridor layout)
-            const gapY = 250 + getRand() * 150;
-            obstacles.push({
-              type: 'block',
-              x: cursorX,
-              y: 40,
-              width: 140,
-              height: gapY - 100,
-              color: 'rgba(0, 243, 255, 0.85)'
-            });
-            obstacles.push({
-              type: 'block',
-              x: cursorX + 200,
-              y: gapY + 100,
-              width: 140,
-              height: (height - 40) - (gapY + 100),
-              color: 'rgba(0, 243, 255, 0.85)'
-            });
-            cursorX += 550;
-          }
+          obstacles.push({ type: 'spike', x: 3100, y: height - 40, width: 40, height: 48, dir: -1, color: 'rgba(255, 0, 102, 0.85)' });
+          obstacles.push({ type: 'spike', x: 3400, y: 40, width: 40, height: 48, dir: 1, color: 'rgba(255, 0, 102, 0.85)' });
+          obstacles.push({ type: 'spike', x: 3700, y: height - 40, width: 40, height: 48, dir: -1, color: 'rgba(255, 0, 102, 0.85)' });
+          obstacles.push({ type: 'spike', x: 4000, y: 40, width: 40, height: 48, dir: 1, color: 'rgba(255, 0, 102, 0.85)' });
+
+          obstacles.push({ type: 'block', x: 4400, y: 40, width: 100, height: 200, color: 'rgba(0, 243, 255, 0.85)' });
+          obstacles.push({ type: 'block', x: 4400, y: height - 200, width: 100, height: 160, color: 'rgba(0, 243, 255, 0.85)' });
+
+        } else if (currentLevel === 3) {
+          // LEVEL 3: Corridor Run (Fast narrow corridors, small gaps)
+          obstacles.push({ type: 'block', x: 600, y: 40, width: 150, height: 220, color: 'rgba(0, 243, 255, 0.85)' });
+          obstacles.push({ type: 'block', x: 600, y: height - 220, width: 150, height: 180, color: 'rgba(0, 243, 255, 0.85)' });
+
+          obstacles.push({ type: 'spike', x: 900, y: height - 40, width: 40, height: 48, dir: -1, color: 'rgba(255, 0, 102, 0.85)' });
+
+          obstacles.push({ type: 'block', x: 1200, y: 40, width: 180, height: 180, color: 'rgba(0, 243, 255, 0.85)' });
+          obstacles.push({ type: 'block', x: 1200, y: height - 260, width: 180, height: 220, color: 'rgba(0, 243, 255, 0.85)' });
+
+          obstacles.push({ type: 'spike', x: 1600, y: 40, width: 40, height: 48, dir: 1, color: 'rgba(255, 0, 102, 0.85)' });
+          obstacles.push({ type: 'spike', x: 1645, y: 40, width: 40, height: 48, dir: 1, color: 'rgba(255, 0, 102, 0.85)' });
+
+          obstacles.push({ type: 'block', x: 2000, y: 180, width: 100, height: 300, color: 'rgba(0, 255, 102, 0.85)' });
+          obstacles.push({ type: 'spike', x: 2030, y: 180, width: 32, height: 36, dir: 1, color: 'rgba(255, 0, 102, 0.85)' });
+
+          obstacles.push({ type: 'block', x: 2400, y: 40, width: 200, height: 250, color: 'rgba(0, 243, 255, 0.85)' });
+          obstacles.push({ type: 'block', x: 2400, y: height - 150, width: 200, height: 110, color: 'rgba(0, 243, 255, 0.85)' });
+
+          obstacles.push({ type: 'spike', x: 2800, y: height - 40, width: 40, height: 48, dir: -1, color: 'rgba(255, 0, 102, 0.85)' });
+          obstacles.push({ type: 'spike', x: 3100, y: 40, width: 40, height: 48, dir: 1, color: 'rgba(255, 0, 102, 0.85)' });
+
+          obstacles.push({ type: 'block', x: 3400, y: 40, width: 120, height: 150, color: 'rgba(0, 243, 255, 0.85)' });
+          obstacles.push({ type: 'block', x: 3400, y: height - 300, width: 120, height: 260, color: 'rgba(0, 243, 255, 0.85)' });
+
+          obstacles.push({ type: 'spike', x: 3800, y: height - 40, width: 40, height: 48, dir: -1, color: 'rgba(255, 0, 102, 0.85)' });
+          obstacles.push({ type: 'spike', x: 4100, y: 40, width: 40, height: 48, dir: 1, color: 'rgba(255, 0, 102, 0.85)' });
+
+          obstacles.push({ type: 'block', x: 4500, y: 40, width: 250, height: 200, color: 'rgba(0, 243, 255, 0.85)' });
+          obstacles.push({ type: 'block', x: 4500, y: height - 200, width: 250, height: 160, color: 'rgba(0, 243, 255, 0.85)' });
+
+        } else if (currentLevel === 4) {
+          // LEVEL 4: Spike Slalom (Tight slalom turns around spike blocks)
+          obstacles.push({ type: 'spike', x: 600, y: height - 40, width: 40, height: 48, dir: -1, color: 'rgba(255, 0, 102, 0.85)' });
+          obstacles.push({ type: 'spike', x: 645, y: height - 40, width: 40, height: 48, dir: -1, color: 'rgba(255, 0, 102, 0.85)' });
+          obstacles.push({ type: 'spike', x: 690, y: height - 40, width: 40, height: 48, dir: -1, color: 'rgba(255, 0, 102, 0.85)' });
+
+          obstacles.push({ type: 'block', x: 1000, y: 40, width: 140, height: 300, color: 'rgba(0, 243, 255, 0.85)' });
+          obstacles.push({ type: 'spike', x: 1050, y: height - 40, width: 40, height: 48, dir: -1, color: 'rgba(255, 0, 102, 0.85)' });
+
+          obstacles.push({ type: 'block', x: 1400, y: height - 340, width: 140, height: 300, color: 'rgba(0, 243, 255, 0.85)' });
+          obstacles.push({ type: 'spike', x: 1450, y: 40, width: 40, height: 48, dir: 1, color: 'rgba(255, 0, 102, 0.85)' });
+
+          obstacles.push({ type: 'spike', x: 1800, y: height - 40, width: 40, height: 48, dir: -1, color: 'rgba(255, 0, 102, 0.85)' });
+          obstacles.push({ type: 'spike', x: 2000, y: 40, width: 40, height: 48, dir: 1, color: 'rgba(255, 0, 102, 0.85)' });
+
+          obstacles.push({ type: 'block', x: 2300, y: 150, width: 180, height: 100, color: 'rgba(0, 255, 102, 0.85)' });
+          obstacles.push({ type: 'spike', x: 2350, y: 150, width: 32, height: 36, dir: 1, color: 'rgba(255, 0, 102, 0.85)' });
+          obstacles.push({ type: 'spike', x: 2400, y: 250, width: 32, height: 36, dir: -1, color: 'rgba(255, 0, 102, 0.85)' });
+
+          obstacles.push({ type: 'block', x: 2800, y: 40, width: 120, height: 260, color: 'rgba(0, 243, 255, 0.85)' });
+          obstacles.push({ type: 'block', x: 2800, y: height - 180, width: 120, height: 140, color: 'rgba(0, 243, 255, 0.85)' });
+
+          obstacles.push({ type: 'spike', x: 3200, y: height - 40, width: 40, height: 48, dir: -1, color: 'rgba(255, 0, 102, 0.85)' });
+          obstacles.push({ type: 'spike', x: 3400, y: 40, width: 40, height: 48, dir: 1, color: 'rgba(255, 0, 102, 0.85)' });
+          obstacles.push({ type: 'spike', x: 3600, y: height - 40, width: 40, height: 48, dir: -1, color: 'rgba(255, 0, 102, 0.85)' });
+
+          obstacles.push({ type: 'block', x: 4000, y: 200, width: 150, height: 275, color: 'rgba(0, 255, 102, 0.85)' });
+          obstacles.push({ type: 'spike', x: 4050, y: 200, width: 32, height: 36, dir: 1, color: 'rgba(255, 0, 102, 0.85)' });
+
+          obstacles.push({ type: 'block', x: 4500, y: 40, width: 150, height: 250, color: 'rgba(0, 243, 255, 0.85)' });
+          obstacles.push({ type: 'block', x: 4500, y: height - 150, width: 150, height: 110, color: 'rgba(0, 243, 255, 0.85)' });
+
+        } else {
+          // LEVEL 5+: The Ultimate Run (Dense, rapid maneuvers, combine all mechanics)
+          obstacles.push({ type: 'spike', x: 600, y: height - 40, width: 40, height: 48, dir: -1, color: 'rgba(255, 0, 102, 0.85)' });
+          obstacles.push({ type: 'spike', x: 750, y: 40, width: 40, height: 48, dir: 1, color: 'rgba(255, 0, 102, 0.85)' });
+
+          obstacles.push({ type: 'block', x: 950, y: 40, width: 160, height: 240, color: 'rgba(0, 243, 255, 0.85)' });
+          obstacles.push({ type: 'block', x: 950, y: height - 240, width: 160, height: 200, color: 'rgba(0, 243, 255, 0.85)' });
+
+          obstacles.push({ type: 'spike', x: 1300, y: height - 40, width: 40, height: 48, dir: -1, color: 'rgba(255, 0, 102, 0.85)' });
+          obstacles.push({ type: 'spike', x: 1345, y: height - 40, width: 40, height: 48, dir: -1, color: 'rgba(255, 0, 102, 0.85)' });
+
+          obstacles.push({ type: 'block', x: 1650, y: 150, width: 120, height: 350, color: 'rgba(0, 255, 102, 0.85)' });
+          obstacles.push({ type: 'spike', x: 1690, y: 150, width: 32, height: 36, dir: 1, color: 'rgba(255, 0, 102, 0.85)' });
+
+          obstacles.push({ type: 'spike', x: 2000, y: 40, width: 40, height: 48, dir: 1, color: 'rgba(255, 0, 102, 0.85)' });
+          obstacles.push({ type: 'spike', x: 2045, y: 40, width: 40, height: 48, dir: 1, color: 'rgba(255, 0, 102, 0.85)' });
+
+          obstacles.push({ type: 'block', x: 2350, y: 40, width: 140, height: 180, color: 'rgba(0, 243, 255, 0.85)' });
+          obstacles.push({ type: 'block', x: 2350, y: height - 340, width: 140, height: 300, color: 'rgba(0, 243, 255, 0.85)' });
+
+          obstacles.push({ type: 'spike', x: 2750, y: height - 40, width: 40, height: 48, dir: -1, color: 'rgba(255, 0, 102, 0.85)' });
+          obstacles.push({ type: 'spike', x: 2950, y: 40, width: 40, height: 48, dir: 1, color: 'rgba(255, 0, 102, 0.85)' });
+
+          obstacles.push({ type: 'block', x: 3250, y: 220, width: 150, height: 120, color: 'rgba(0, 255, 102, 0.85)' });
+          obstacles.push({ type: 'spike', x: 3300, y: 220, width: 32, height: 36, dir: 1, color: 'rgba(255, 0, 102, 0.85)' });
+          obstacles.push({ type: 'spike', x: 3300, y: 340, width: 32, height: 36, dir: -1, color: 'rgba(255, 0, 102, 0.85)' });
+
+          obstacles.push({ type: 'block', x: 3650, y: 40, width: 180, height: 260, color: 'rgba(0, 243, 255, 0.85)' });
+          obstacles.push({ type: 'block', x: 3650, y: height - 180, width: 180, height: 140, color: 'rgba(0, 243, 255, 0.85)' });
+
+          obstacles.push({ type: 'spike', x: 4100, y: height - 40, width: 40, height: 48, dir: -1, color: 'rgba(255, 0, 102, 0.85)' });
+          obstacles.push({ type: 'spike', x: 4300, y: 40, width: 40, height: 48, dir: 1, color: 'rgba(255, 0, 102, 0.85)' });
+
+          obstacles.push({ type: 'block', x: 4600, y: 40, width: 300, height: 220, color: 'rgba(0, 243, 255, 0.85)' });
+          obstacles.push({ type: 'block', x: 4600, y: height - 220, width: 300, height: 180, color: 'rgba(0, 243, 255, 0.85)' });
         }
+
+        // Final gate placement
+        obstacles.push({
+          type: 'gate',
+          x: levelLength - 800,
+          y: 40,
+          width: 15,
+          height: height - 80,
+          color: '#ffffff'
+        });
+
       } else {
         // Endless Mode: Generated dynamically/infinitely or a massive procedural buffer
         levelLength = 9999999; // effectively endless distance
@@ -2399,13 +2552,13 @@
       // Compile competitors list including the human player
       const runners = [];
       if (!player.isDead) {
-        runners.push({ name: "YOU", x: player.x, isDead: false, color: 'var(--neon-green)' });
+        runners.push({ name: playerName, x: player.x, isDead: false, color: 'var(--neon-green)', isPlayer: true });
       } else {
-        runners.push({ name: "YOU", x: player.x, isDead: true, color: 'var(--neon-green)' });
+        runners.push({ name: playerName, x: player.x, isDead: true, color: 'var(--neon-green)', isPlayer: true });
       }
 
       for (const b of bots) {
-        runners.push({ name: b.name, x: b.x, isDead: b.isDead, color: b.color });
+        runners.push({ name: b.name, x: b.x, isDead: b.isDead, color: b.color, isPlayer: false });
       }
 
       // Sort racers by horizontal position x (descending)
@@ -2416,8 +2569,8 @@
 
       runners.forEach((runner, idx) => {
         const row = document.createElement('div');
-        row.className = `leaderboard-row ${runner.name === 'YOU' ? 'player' : ''}`;
-        row.style.color = runner.isDead ? '#666' : runner.color;
+        row.className = `leaderboard-row ${runner.isPlayer ? 'player' : ''}`;
+        row.style.color = runner.isDead ? '#666' : (runner.isPlayer ? 'var(--neon-green)' : runner.color);
 
         row.innerHTML = `
           <span>${idx + 1}. ${runner.name}</span>
@@ -2429,7 +2582,7 @@
       // Win Condition: If player finishes the race (levelLength limit)
       if (!player.isDead && player.x >= levelLength - 800) {
         // Evaluate standings position of YOU
-        const standings = runners.findIndex(r => r.name === "YOU");
+        const standings = runners.findIndex(r => r.isPlayer);
         if (standings === 0) {
           // We won! Increment wins tracker
           incrementRaceWins();
