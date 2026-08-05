@@ -1,0 +1,2901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>plo.io - Geometry Wave Runner</title>
+  <style>
+    :root {
+      --neon-green: #00ff66;
+      --neon-cyan: #00f3ff;
+      --neon-dark: #051412;
+      --neon-glow: 0 0 10px rgba(0, 255, 102, 0.6), 0 0 20px rgba(0, 255, 102, 0.4);
+      --cyan-glow: 0 0 10px rgba(0, 243, 255, 0.6), 0 0 20px rgba(0, 243, 255, 0.4);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--neon-dark);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #fff;
+    }
+
+    /* Core Single Page Container */
+    #game-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Game Canvas */
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      z-index: 1;
+    }
+
+    /* Overlay Screens and UI elements */
+    .screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      padding: 40px 20px;
+      background: radial-gradient(circle, rgba(10,35,30,0.85) 0%, rgba(5,20,18,0.95) 100%);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .screen.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(1.05);
+    }
+
+    /* Main Menu Screen */
+    #main-menu-screen {
+      justify-content: center;
+      gap: 30px;
+    }
+
+    .title-container {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .title-logo {
+      font-size: 72px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      color: #fff;
+      text-shadow: var(--neon-glow);
+      display: inline-block;
+      position: relative;
+      animation: titleFloat 3s ease-in-out infinite alternate;
+    }
+
+    .title-logo span {
+      color: var(--neon-cyan);
+      text-shadow: var(--cyan-glow);
+    }
+
+    .subtitle {
+      font-size: 16px;
+      color: #8faeab;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-top: -5px;
+    }
+
+    /* Cards Layout for Game Modes */
+    .cards-container {
+      display: flex;
+      justify-content: center;
+      gap: 25px;
+      width: 100%;
+      max-width: 1000px;
+      padding: 10px;
+    }
+
+    .mode-card {
+      flex: 1;
+      max-width: 280px;
+      background: rgba(10, 35, 32, 0.6);
+      border: 2px solid rgba(0, 255, 102, 0.3);
+      border-radius: 16px;
+      padding: 30px 20px;
+      text-align: center;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      backdrop-filter: blur(8px);
+    }
+
+    .mode-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(90deg, var(--neon-green), var(--neon-cyan));
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.3s ease;
+    }
+
+    .mode-card:hover {
+      transform: translateY(-8px);
+      border-color: var(--neon-green);
+      box-shadow: 0 10px 25px rgba(0, 255, 102, 0.2);
+    }
+
+    .mode-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    /* Specific coloring/styling for different mode cards */
+    .mode-card.classic-card {
+      border-color: rgba(0, 255, 102, 0.4);
+    }
+    .mode-card.endless-card {
+      border-color: rgba(0, 243, 255, 0.4);
+    }
+    .mode-card.endless-card::before {
+      background: linear-gradient(90deg, var(--neon-cyan), var(--neon-green));
+    }
+    .mode-card.endless-card:hover {
+      border-color: var(--neon-cyan);
+      box-shadow: 0 10px 25px rgba(0, 243, 255, 0.2);
+    }
+    .mode-card.race-card {
+      border-color: rgba(255, 0, 102, 0.4);
+    }
+    .mode-card.race-card::before {
+      background: linear-gradient(90deg, #ff0066, var(--neon-cyan));
+    }
+    .mode-card.race-card:hover {
+      border-color: #ff0066;
+      box-shadow: 0 10px 25px rgba(255, 0, 102, 0.2);
+    }
+
+    .mode-icon {
+      font-size: 40px;
+      margin-bottom: 15px;
+    }
+
+    .mode-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .mode-desc {
+      font-size: 13px;
+      color: #9cb8b5;
+      line-height: 1.5;
+    }
+
+    .best-score-tag {
+      margin-top: 15px;
+      font-size: 11px;
+      font-weight: bold;
+      color: var(--neon-cyan);
+      background: rgba(0, 243, 255, 0.1);
+      padding: 4px 8px;
+      border-radius: 20px;
+      display: inline-block;
+    }
+
+    /* Social Icons Footer */
+    .social-footer {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+      margin-top: 10px;
+    }
+
+    .social-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #638581;
+    }
+
+    .social-links {
+      display: flex;
+      gap: 15px;
+    }
+
+    .social-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255, 255, 255, 0.2);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #fff;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .social-btn svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    .social-btn:hover {
+      transform: translateY(-4px);
+      background: rgba(0, 255, 102, 0.15);
+      border-color: var(--neon-green);
+      color: var(--neon-green);
+      box-shadow: 0 0 10px rgba(0, 255, 102, 0.3);
+    }
+
+    /* Sound/Music Settings controls in menu */
+    .settings-row {
+      display: flex;
+      gap: 15px;
+      margin-top: 5px;
+    }
+
+    .settings-btn {
+      background: rgba(10, 35, 32, 0.6);
+      border: 1px solid rgba(0, 255, 102, 0.3);
+      padding: 8px 15px;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .settings-btn:hover {
+      border-color: var(--neon-green);
+      background: rgba(0, 255, 102, 0.1);
+    }
+
+    /* Level Selection Screen */
+    #level-select-screen {
+      justify-content: center;
+      gap: 25px;
+    }
+
+    .back-btn {
+      position: absolute;
+      top: 30px;
+      left: 30px;
+      background: transparent;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 8px;
+      color: #fff;
+      padding: 8px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .back-btn:hover {
+      border-color: var(--neon-green);
+      color: var(--neon-green);
+      box-shadow: 0 0 8px rgba(0, 255, 102, 0.3);
+    }
+
+    .level-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 15px;
+      width: 100%;
+      max-width: 750px;
+      padding: 10px;
+    }
+
+    @media (max-width: 600px) {
+      .level-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .cards-container {
+        flex-direction: column;
+        align-items: center;
+      }
+      .mode-card {
+        width: 100%;
+        max-width: 320px;
+        padding: 15px;
+      }
+    }
+
+    .level-box {
+      aspect-ratio: 1;
+      background: rgba(10, 35, 32, 0.6);
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s ease;
+      font-weight: 800;
+    }
+
+    .level-box:hover {
+      transform: scale(1.05);
+      border-color: var(--neon-green);
+      box-shadow: 0 0 12px rgba(0, 255, 102, 0.2);
+    }
+
+    .level-num {
+      font-size: 28px;
+      color: #fff;
+    }
+
+    .level-percent {
+      font-size: 11px;
+      color: var(--neon-green);
+      margin-top: 4px;
+      font-weight: 600;
+    }
+
+    .level-box.locked {
+      opacity: 0.5;
+      cursor: not-allowed;
+      border-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .level-box.locked:hover {
+      transform: none;
+      box-shadow: none;
+      border-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .level-box .lock-icon {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 14px;
+      height: 14px;
+      fill: #888;
+    }
+
+    /* HUD (Heads-Up Display) overlay during gameplay */
+    #hud {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 5;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 15px 25px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    #hud.active {
+      opacity: 1;
+    }
+
+    .hud-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+    }
+
+    .hud-btn {
+      pointer-events: auto;
+      background: rgba(10, 35, 32, 0.7);
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .hud-btn:hover {
+      border-color: var(--neon-green);
+      box-shadow: 0 0 10px rgba(0, 255, 102, 0.3);
+    }
+
+    .pause-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      font-size: 20px;
+    }
+
+    /* Mode Indicators */
+    .hud-center-info {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      flex-grow: 1;
+      max-width: 40%;
+    }
+
+    .progress-container {
+      width: 100%;
+      height: 20px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--neon-green), var(--neon-cyan));
+      transition: width 0.1s linear;
+    }
+
+    .progress-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 11px;
+      font-weight: 800;
+      color: #fff;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+    }
+
+    .hud-level-indicator {
+      font-size: 12px;
+      font-weight: 700;
+      color: #9cb8b5;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    /* Practice controls in bottom left / side of HUD */
+    .hud-practice-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: auto;
+      align-self: flex-start;
+      margin-bottom: 10px;
+    }
+
+    .practice-action-btn {
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .practice-action-btn.place {
+      background: rgba(0, 243, 255, 0.2);
+      border-color: var(--neon-cyan);
+    }
+    .practice-action-btn.place:hover {
+      background: rgba(0, 243, 255, 0.35);
+      box-shadow: 0 0 8px rgba(0, 243, 255, 0.4);
+    }
+
+    .practice-action-btn.clear {
+      background: rgba(255, 0, 102, 0.2);
+      border-color: #ff0066;
+    }
+    .practice-action-btn.clear:hover {
+      background: rgba(255, 0, 102, 0.35);
+      box-shadow: 0 0 8px rgba(255, 0, 102, 0.4);
+    }
+
+    /* Leaderboard for Race Mode overlay */
+    .hud-leaderboard {
+      background: rgba(5, 20, 18, 0.85);
+      border: 1.5px solid rgba(0, 243, 255, 0.3);
+      border-radius: 8px;
+      padding: 10px;
+      width: 160px;
+      align-self: flex-end;
+      pointer-events: auto;
+      display: none;
+    }
+
+    .hud-leaderboard.active {
+      display: block;
+    }
+
+    .leaderboard-title {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--neon-cyan);
+      margin-bottom: 5px;
+      font-weight: 700;
+      border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+      padding-bottom: 3px;
+    }
+
+    .leaderboard-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      padding: 3px 0;
+      font-weight: 600;
+    }
+
+    .leaderboard-row.player {
+      color: var(--neon-green);
+    }
+
+    /* Modals / Overlays for Pause, Game Over, Level Complete */
+    .modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 100;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-content {
+      background: linear-gradient(135deg, rgba(10,35,32,0.95) 0%, rgba(5,15,13,0.98) 100%);
+      border: 2px solid var(--neon-green);
+      border-radius: 20px;
+      padding: 40px;
+      width: 90%;
+      max-width: 440px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0, 255, 102, 0.2);
+      transform: scale(0.9);
+      transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .modal-overlay.active .modal-content {
+      transform: scale(1);
+    }
+
+    .modal-title {
+      font-size: 36px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 15px;
+      text-shadow: var(--neon-glow);
+    }
+
+    .modal-title.win {
+      color: var(--neon-cyan);
+      text-shadow: var(--cyan-glow);
+    }
+
+    .modal-title.fail {
+      color: #ff0066;
+      text-shadow: 0 0 10px rgba(255, 0, 102, 0.6);
+    }
+
+    .modal-stats {
+      margin: 20px 0;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      padding: 15px;
+    }
+
+    .stat-line {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      margin-bottom: 8px;
+      color: #b1d0cc;
+    }
+
+    .stat-line:last-child {
+      margin-bottom: 0;
+    }
+
+    .stat-line span.val {
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .modal-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 25px;
+    }
+
+    .modal-btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 2px solid transparent;
+    }
+
+    .modal-btn.primary {
+      background: var(--neon-green);
+      color: var(--neon-dark);
+    }
+
+    .modal-btn.primary:hover {
+      background: #fff;
+      box-shadow: 0 0 15px var(--neon-green);
+    }
+
+    .modal-btn.secondary {
+      background: transparent;
+      border-color: rgba(255, 255, 255, 0.3);
+      color: #fff;
+    }
+
+    .modal-btn.secondary:hover {
+      border-color: #fff;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Keyframe Animations */
+    @keyframes titleFloat {
+      0% {
+        transform: translateY(0);
+      }
+      100% {
+        transform: translateY(-8px);
+      }
+    }
+
+    /* Practice toggle indicator check styling */
+    .practice-toggle-box {
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-right: 15px;
+    }
+
+    .practice-toggle-box input[type="checkbox"] {
+      display: none;
+    }
+
+    .practice-checkbox-custom {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--neon-cyan);
+      border-radius: 4px;
+      cursor: pointer;
+      position: relative;
+      background: rgba(0, 243, 255, 0.05);
+    }
+
+    .practice-toggle-box input[type="checkbox"]:checked + .practice-checkbox-custom::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 6px;
+      width: 5px;
+      height: 10px;
+      border: solid var(--neon-cyan);
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+    }
+
+    .practice-label {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--neon-cyan);
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="game-container">
+    <!-- The HTML5 Game Canvas -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Main Menu Screen Overlay -->
+    <div id="main-menu-screen" class="screen">
+      <div></div> <!-- Spacer -->
+
+      <div class="title-container">
+        <h1 class="title-logo">plo<span>.io</span></h1>
+        <div class="subtitle">Geometry Wave Runner</div>
+      </div>
+
+      <div class="cards-container">
+        <div class="mode-card classic-card" onclick="openLevelSelect()">
+          <div class="mode-icon">🏆</div>
+          <div class="mode-title">Classic</div>
+          <div class="mode-desc">Fly through 10 hand-crafted obstacle courses with progressively higher speeds.</div>
+        </div>
+
+        <div class="mode-card endless-card" onclick="startEndlessMode()">
+          <div class="mode-icon">⚡</div>
+          <div class="mode-title">Endless</div>
+          <div class="mode-desc">How long can you survive? Speed and danger increase infinitely as you go.</div>
+          <div id="endless-high-score" class="best-score-tag">Best: 0m</div>
+        </div>
+
+        <div class="mode-card race-card" onclick="startRaceMode()">
+          <div class="mode-icon">🏁</div>
+          <div class="mode-title">Race</div>
+          <div class="mode-desc">Compete head-to-head against 4 geometry bot AI competitors in real-time.</div>
+          <div id="race-stats" class="best-score-tag">Wins: 0</div>
+        </div>
+      </div>
+
+      <!-- Settings & Controls Row -->
+      <div class="settings-row">
+        <button id="audio-toggle" class="settings-btn" onclick="toggleAudio()">
+          <span>🔊</span> Audio: ON
+        </button>
+      </div>
+
+      <!-- Footer / Social Overlay Links -->
+      <footer class="social-footer">
+        <div class="social-title">Follow the Creator</div>
+        <div class="social-links">
+          <a href="https://github.com/aadisoni8044-code" target="_blank" rel="noopener noreferrer" class="social-btn" title="GitHub">
+            <svg viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          </a>
+          <a href="https://www.linkedin.com/in/aadi-soni-a9ba35394/" target="_blank" rel="noopener noreferrer" class="social-btn" title="LinkedIn">
+            <svg viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+          </a>
+          <a href="https://www.instagram.com/aadisoni8044/" target="_blank" rel="noopener noreferrer" class="social-btn" title="Instagram">
+            <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+          </a>
+          <a href="https://x.com/soni_aadi70883" target="_blank" rel="noopener noreferrer" class="social-btn" title="X (Twitter)">
+            <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          </a>
+          <a href="https://www.chess.com/member/aadisoni-c" target="_blank" rel="noopener noreferrer" class="social-btn" title="Chess.com">
+            <!-- Chess style representation using customized knight outline SVG -->
+            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-4 6h-2v2h2v2h-2v2h2v2h-2v-2H9v-2h2v-2H9V9h2V7h2v2h2V9zm-4-2H9v2h2V7zm0 8H9v2h2v-2zM5 19V5h14v14H5z"/></svg>
+          </a>
+        </div>
+      </footer>
+    </div>
+
+    <!-- Level Selection Screen Overlay -->
+    <div id="level-select-screen" class="screen hidden">
+      <button class="back-btn" onclick="openMainMenu()">← Menu</button>
+
+      <div class="title-container">
+        <h2 class="title-logo" style="font-size: 44px;">Level Select</h2>
+        <div class="subtitle">Classic Mode Courses</div>
+      </div>
+
+      <div id="level-grid" class="level-grid">
+        <!-- Generically populated by JS to load states -->
+      </div>
+
+      <div></div> <!-- Spacer -->
+    </div>
+
+    <!-- HUD Overlay during Gameplay -->
+    <div id="hud">
+      <div class="hud-top">
+        <button class="hud-btn pause-btn" onclick="pauseGame()">⏸</button>
+
+        <div class="hud-center-info">
+          <div id="hud-level-text" class="hud-level-indicator">Level 1</div>
+          <div class="progress-container">
+            <div id="hud-progress-bar" class="progress-bar"></div>
+            <div id="hud-progress-text" class="progress-text">0%</div>
+          </div>
+        </div>
+
+        <div class="practice-toggle-box">
+          <input type="checkbox" id="practice-mode-chk" onchange="togglePracticeMode(this.checked)">
+          <label for="practice-mode-chk" class="practice-checkbox-custom"></label>
+          <label for="practice-mode-chk" class="practice-label">Practice</label>
+        </div>
+      </div>
+
+      <div class="hud-top" style="justify-content: space-between; align-items: flex-end; width: 100%;">
+        <!-- Practice check-pointing controls -->
+        <div id="practice-controls" class="hud-practice-controls" style="visibility: hidden;">
+          <button class="hud-btn practice-action-btn place" onclick="placeCheckpoint()">
+            🟢 Place Checkpoint
+          </button>
+          <button class="hud-btn practice-action-btn clear" onclick="clearCheckpoints()">
+            🔴 Clear All
+          </button>
+        </div>
+
+        <!-- Real-time bot leaderboard for Race Mode -->
+        <div id="race-leaderboard" class="hud-leaderboard">
+          <div class="leaderboard-title">Race Positions</div>
+          <div id="leaderboard-list">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pause Modal -->
+    <div id="pause-modal" class="modal-overlay">
+      <div class="modal-content">
+        <h2 class="modal-title">Paused</h2>
+        <div class="modal-stats">
+          <div class="stat-line">
+            <span>Current Progress</span>
+            <span id="pause-progress-val" class="val">0%</span>
+          </div>
+          <div class="stat-line">
+            <span>Game Mode</span>
+            <span id="pause-mode-val" class="val">Classic</span>
+          </div>
+        </div>
+        <div class="modal-buttons">
+          <button class="modal-btn primary" onclick="resumeGame()">Resume</button>
+          <button class="modal-btn secondary" onclick="restartLevel()">Restart</button>
+          <button class="modal-btn secondary" onclick="quitToMenu()">Quit to Menu</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="gameover-modal" class="modal-overlay">
+      <div class="modal-content" style="border-color: #ff0066; box-shadow: 0 10px 30px rgba(255, 0, 102, 0.2);">
+        <h2 class="modal-title fail">Crashed</h2>
+        <div class="modal-stats">
+          <div class="stat-line">
+            <span>Final Progress</span>
+            <span id="fail-progress-val" class="val">0%</span>
+          </div>
+          <div class="stat-line">
+            <span>Score Achieved</span>
+            <span id="fail-score-val" class="val">0m</span>
+          </div>
+        </div>
+        <div class="modal-buttons">
+          <button class="modal-btn primary" style="background: #ff0066;" onclick="restartLevel()">Retry</button>
+          <button class="modal-btn secondary" onclick="quitToMenu()">Main Menu</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Level Complete / Victory Modal -->
+    <div id="win-modal" class="modal-overlay">
+      <div class="modal-content" style="border-color: var(--neon-cyan); box-shadow: 0 10px 30px rgba(0, 243, 255, 0.2);">
+        <h2 class="modal-title win">Cleared!</h2>
+        <div class="modal-stats">
+          <div class="stat-line">
+            <span>Completed Mode</span>
+            <span id="win-mode-val" class="val">Level 1</span>
+          </div>
+          <div class="stat-line">
+            <span>Attempt Count</span>
+            <span id="win-attempts-val" class="val">1</span>
+          </div>
+        </div>
+        <div class="modal-buttons">
+          <button id="win-next-btn" class="modal-btn primary" style="background: var(--neon-cyan);" onclick="nextLevel()">Next Level</button>
+          <button class="modal-btn secondary" onclick="quitToMenu()">Main Menu</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // --- CORE GAME STATE AND VARIABLES ---
+    const STATE_MENU = 'menu';
+    const STATE_LEVEL_SELECT = 'level_select';
+    const STATE_PLAYING = 'playing';
+    const STATE_PAUSED = 'paused';
+    const STATE_GAMEOVER = 'gameover';
+    const STATE_VICTORY = 'victory';
+
+    let currentGameState = STATE_MENU;
+    let currentGameMode = 'classic'; // 'classic', 'endless', 'race'
+    let currentLevel = 1;
+    let attemptCount = 1;
+    let isMuted = false;
+
+    // Canvas scaling and dimensions
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    let width = 1200;
+    let height = 675;
+    let scaleX = 1;
+    let scaleY = 1;
+
+    // Timing
+    let lastTime = 0;
+    let deltaTime = 0;
+
+    // Inputs
+    const inputs = {
+      active: false,
+      space: false,
+      w: false,
+      pointer: false
+    };
+
+    // Parallax background offsets
+    let bgScrollX = 0;
+    let bgScrollY = 0;
+
+    // Offscreen Hexagon Grid Canvas for performance caching
+    let hexPatternCanvas = null;
+    let hexPatternWidth = 256;
+    let hexPatternHeight = 256;
+
+    // LocalStorage keys
+    const SAVE_CLASSIC_PROGRESS = 'plo_io_classic_progress';
+    const SAVE_ENDLESS_HI_SCORE = 'plo_io_endless_hiscore';
+    const SAVE_RACE_WINS = 'plo_io_race_wins';
+
+    // Game stats trackers
+    let levelProgress = 0; // 0 to 100
+    let endlessDistance = 0; // meters survived
+    let raceWinsCount = 0;
+
+    // --- AUDIO SYSTEM (WEB AUDIO API SYNTHESIZER) ---
+    let audioCtx = null;
+    let synthIntervalId = null;
+    let synthBeatsCount = 0;
+
+    // --- LEVEL OBSTACLES AND GENERATION ---
+    let obstacles = []; // array of {type: 'spike'|'block', x, y, width, height, color}
+    let levelLength = 6000; // total width in pixels of a classic course level
+    let currentPracticeCheckpoint = null; // saved player snapshot
+
+    // --- RACE MODE AI BOT COMPETITORS ---
+    let bots = []; // array of bot objects: {name, x, y, vy, color, isDead, lastDecisionTime, angle, targetY}
+
+    // --- PLAYER OBJECT ---
+    let player = {
+      x: 150,
+      y: 337.5,
+      width: 32,
+      height: 24,
+      vy: 0,
+      targetVy: 0,
+      angle: 0,
+      baseSpeed: 380, // forward movement speed
+      speedMultiplier: 1,
+      isDead: false,
+      trail: [], // array of {x, y, age} for the glowing wave line
+      particles: [], // actual particle explosion / drift sparks
+      checkpoints: [], // practice mode checkpoints: {x, y, vy, bgScrollX, bgScrollY, attempt}
+    };
+
+    // Camera
+    let camera = {
+      x: 0,
+      y: 0,
+      targetY: 0,
+    };
+
+    // --- INITIALIZATION ---
+    window.addEventListener('load', () => {
+      initCanvas();
+      createHexagonPattern();
+      initInputListeners();
+      loadSavedData();
+      renderLevelGrid();
+
+      // Begin rendering loop
+      requestAnimationFrame(gameLoop);
+
+      // Update score display UI tags
+      updateMenuLeaderboardTags();
+    });
+
+    window.addEventListener('resize', initCanvas);
+
+    function initCanvas() {
+      // Setup scaled dimensions preserving a 16:9 virtual ratio
+      const container = document.getElementById('game-container');
+      const rect = container.getBoundingClientRect();
+
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+
+      // Calculate responsive scale factor
+      scaleX = canvas.width / width;
+      scaleY = canvas.height / height;
+    }
+
+    // --- PROCEDURAL HONEYCOMB DESIGN ---
+    function createHexagonPattern() {
+      hexPatternCanvas = document.createElement('canvas');
+      hexPatternCanvas.width = hexPatternWidth;
+      hexPatternCanvas.height = hexPatternHeight;
+      const hCtx = hexPatternCanvas.getContext('2d');
+
+      // Draw dark dark teal background
+      hCtx.fillStyle = '#051412';
+      hCtx.fillRect(0, 0, hexPatternWidth, hexPatternHeight);
+
+      const r = 24; // hexagon radius
+      const h = r * Math.sqrt(3);
+      const w = r * 1.5;
+
+      hCtx.strokeStyle = 'rgba(0, 255, 102, 0.12)';
+      hCtx.lineWidth = 1.5;
+
+      // Draw tiled hexagons
+      for (let x = -r; x < hexPatternWidth + r * 2; x += r * 3) {
+        for (let y = -r; y < hexPatternHeight + r * 2; y += h) {
+          drawHexagonPath(hCtx, x, y, r);
+          hCtx.stroke();
+
+          // Draw offset row
+          drawHexagonPath(hCtx, x + w, y + h / 2, r);
+          hCtx.stroke();
+        }
+      }
+
+      // Add random darker/lighter highlights inside hexes for high-tech aesthetic
+      hCtx.fillStyle = 'rgba(0, 243, 255, 0.03)';
+      for (let i = 0; i < 5; i++) {
+        const rx = Math.random() * hexPatternWidth;
+        const ry = Math.random() * hexPatternHeight;
+        hCtx.beginPath();
+        hCtx.arc(rx, ry, Math.random() * 40 + 20, 0, Math.PI * 2);
+        hCtx.fill();
+      }
+    }
+
+    function drawHexagonPath(context, x, y, radius) {
+      context.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const angle = (i * Math.PI) / 3;
+        const px = x + radius * Math.cos(angle);
+        const py = y + radius * Math.sin(angle);
+        if (i === 0) context.moveTo(px, py);
+        else context.lineTo(px, py);
+      }
+      context.closePath();
+    }
+
+    // --- INPUT HANDLERS ---
+    function initInputListeners() {
+      // Keyboard listeners
+      window.addEventListener('keydown', (e) => {
+        if (e.code === 'Space') {
+          inputs.space = true;
+          e.preventDefault();
+        }
+        if (e.code === 'KeyW' || e.code === 'ArrowUp') {
+          inputs.w = true;
+        }
+        if (e.code === 'Escape') {
+          if (currentGameState === STATE_PLAYING) {
+            pauseGame();
+          } else if (currentGameState === STATE_PAUSED) {
+            resumeGame();
+          }
+        }
+        updateInputActiveState();
+      });
+
+      window.addEventListener('keyup', (e) => {
+        if (e.code === 'Space') {
+          inputs.space = false;
+        }
+        if (e.code === 'KeyW' || e.code === 'ArrowUp') {
+          inputs.w = false;
+        }
+        updateInputActiveState();
+      });
+
+      // Pointer (Mouse / Touch) listeners
+      window.addEventListener('mousedown', (e) => {
+        if (e.button === 0) { // Left click
+          inputs.pointer = true;
+          updateInputActiveState();
+        }
+      });
+
+      window.addEventListener('mouseup', (e) => {
+        if (e.button === 0) {
+          inputs.pointer = false;
+          updateInputActiveState();
+        }
+      });
+
+      window.addEventListener('touchstart', (e) => {
+        // Prevent default zoom or scroll on game container
+        if (e.target.closest('#game-container')) {
+          inputs.pointer = true;
+          updateInputActiveState();
+        }
+      });
+
+      window.addEventListener('touchend', (e) => {
+        inputs.pointer = false;
+        updateInputActiveState();
+      });
+    }
+
+    function updateInputActiveState() {
+      inputs.active = inputs.space || inputs.w || inputs.pointer;
+    }
+
+    // --- LOCAL STORAGE STATE ---
+    function loadSavedData() {
+      try {
+        const savedProgress = localStorage.getItem(SAVE_CLASSIC_PROGRESS);
+        if (!savedProgress) {
+          const defaultProgress = {};
+          for (let i = 1; i <= 10; i++) {
+            defaultProgress[i] = i === 1 ? 0 : null; // Level 1 unlocked (0% progress), others locked (null)
+          }
+          localStorage.setItem(SAVE_CLASSIC_PROGRESS, JSON.stringify(defaultProgress));
+        }
+
+        const savedHiScore = localStorage.getItem(SAVE_ENDLESS_HI_SCORE);
+        if (savedHiScore) {
+          endlessDistance = parseInt(savedHiScore, 10);
+        }
+
+        const savedRaceWins = localStorage.getItem(SAVE_RACE_WINS);
+        if (savedRaceWins) {
+          raceWinsCount = parseInt(savedRaceWins, 10);
+        }
+      } catch (e) {
+        console.error("Failed to load local storage game data:", e);
+      }
+    }
+
+    function saveClassicProgress(level, percent) {
+      try {
+        const data = JSON.parse(localStorage.getItem(SAVE_CLASSIC_PROGRESS));
+        if (data) {
+          // Update level progress only if the new progress is higher
+          const currentBest = data[level] || 0;
+          if (percent > currentBest) {
+            data[level] = percent;
+          }
+          // Unlock next level if this one is completed
+          if (percent >= 100 && level < 10) {
+            if (data[level + 1] === null) {
+              data[level + 1] = 0;
+            }
+          }
+          localStorage.setItem(SAVE_CLASSIC_PROGRESS, JSON.stringify(data));
+          renderLevelGrid();
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function saveEndlessHighScore(score) {
+      try {
+        if (score > endlessDistance) {
+          endlessDistance = score;
+          localStorage.setItem(SAVE_ENDLESS_HI_SCORE, score.toString());
+          updateMenuLeaderboardTags();
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function incrementRaceWins() {
+      try {
+        raceWinsCount++;
+        localStorage.setItem(SAVE_RACE_WINS, raceWinsCount.toString());
+        updateMenuLeaderboardTags();
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function updateMenuLeaderboardTags() {
+      document.getElementById('endless-high-score').innerText = `Best: ${endlessDistance}m`;
+      document.getElementById('race-stats').innerText = `Wins: ${raceWinsCount}`;
+    }
+
+    function renderLevelGrid() {
+      const grid = document.getElementById('level-grid');
+      grid.innerHTML = '';
+
+      try {
+        const data = JSON.parse(localStorage.getItem(SAVE_CLASSIC_PROGRESS)) || {};
+        for (let i = 1; i <= 10; i++) {
+          const progress = data[i];
+          const isLocked = progress === null;
+
+          const box = document.createElement('div');
+          box.className = `level-box ${isLocked ? 'locked' : ''}`;
+
+          if (!isLocked) {
+            box.onclick = () => startClassicLevel(i);
+
+            const num = document.createElement('div');
+            num.className = 'level-num';
+            num.innerText = i;
+            box.appendChild(num);
+
+            const percent = document.createElement('div');
+            percent.className = 'level-percent';
+            percent.innerText = `${progress}%`;
+            box.appendChild(percent);
+          } else {
+            // Locked design
+            const num = document.createElement('div');
+            num.className = 'level-num';
+            num.style.color = '#555';
+            num.innerText = i;
+            box.appendChild(num);
+
+            // Lock SVG Icon
+            box.innerHTML += `
+              <svg class="lock-icon" viewBox="0 0 24 24">
+                <path d="M12 2c-2.76 0-5 2.24-5 5v3H6c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-8c0-1.1-.9-2-2-2h-1V7c0-2.76-2.24-5-5-5zm-3 5c0-1.66 1.34-3 3-3s3 1.34 3 3v3H9V7zm3 10c-.55 0-1-.45-1-1v-2c0-.55.45-1 1-1s1 .45 1 1v2c0 .55-.45 1-1 1z"/>
+              </svg>
+            `;
+          }
+
+          grid.appendChild(box);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    // --- GAME ENGINE LOOP ---
+    function gameLoop(time) {
+      if (!lastTime) lastTime = time;
+      deltaTime = (time - lastTime) / 1000;
+      lastTime = time;
+
+      // Clamp deltaTime to avoid giant jumps on tab unfocus
+      if (deltaTime > 0.1) deltaTime = 0.1;
+
+      update(deltaTime);
+      render();
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    // --- STATE ROUTER & TRANSITIONS ---
+    function setGameState(newState) {
+      currentGameState = newState;
+
+      // Toggle visibility of overlays
+      const screens = {
+        [STATE_MENU]: 'main-menu-screen',
+        [STATE_LEVEL_SELECT]: 'level-select-screen',
+      };
+
+      // Hide all overlays first
+      document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+      document.getElementById('hud').classList.remove('active');
+      hideAllModals();
+
+      // Show requested overlay
+      if (screens[newState]) {
+        document.getElementById(screens[newState]).classList.remove('hidden');
+      }
+
+      // Handle custom transitions
+      if (newState === STATE_PLAYING) {
+        document.getElementById('hud').classList.add('active');
+        // Instantly start driving synthesizer background loops
+        startSynthMusic();
+      } else {
+        // Stop background sequencers on menus / modals
+        stopSynthMusic();
+      }
+    }
+
+    function openMainMenu() {
+      setGameState(STATE_MENU);
+    }
+
+    function openLevelSelect() {
+      setGameState(STATE_LEVEL_SELECT);
+    }
+
+    function hideAllModals() {
+      document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
+    }
+
+    // --- CORE REPLAY / LEVEL LOADERS ---
+    function startClassicLevel(lvlNum) {
+      currentGameMode = 'classic';
+      currentLevel = lvlNum;
+      attemptCount = 1; // resets or increments handled on death
+
+      initGameElements();
+      setGameState(STATE_PLAYING);
+    }
+
+    function startEndlessMode() {
+      currentGameMode = 'endless';
+      attemptCount = 1;
+
+      initGameElements();
+      setGameState(STATE_PLAYING);
+    }
+
+    function startRaceMode() {
+      currentGameMode = 'race';
+      attemptCount = 1;
+
+      initGameElements();
+      setGameState(STATE_PLAYING);
+    }
+
+    // --- PLAYER PHYSICS & PARTICLE SYSTEMS ---
+    function initPlayer() {
+      player.x = 150;
+      player.y = 337.5;
+      player.vy = 0;
+      player.targetVy = 0;
+      player.angle = 0;
+      player.isDead = false;
+      player.trail = [];
+      player.particles = [];
+      player.speedMultiplier = 1;
+
+      // Let speeds vary slightly based on mode/difficulty later
+      if (currentGameMode === 'classic') {
+        player.baseSpeed = 380 + (currentLevel * 15); // slightly faster on later levels
+      } else {
+        player.baseSpeed = 400; // endless / race
+      }
+
+      camera.x = 0;
+      camera.y = 0;
+      camera.targetY = 0;
+    }
+
+    function updatePlayerPhysics(dt) {
+      if (player.isDead) {
+        updatePlayerParticles(dt);
+        return;
+      }
+
+      // 1. Move Player Forward horizontally
+      player.x += player.baseSpeed * player.speedMultiplier * dt;
+
+      // 2. Adjust target diagonal velocities based on Inputs
+      // Up diagonal is roughly negative Y direction, down diagonal is positive Y direction
+      const diagonalSpeed = 390;
+      if (inputs.active) {
+        player.targetVy = -diagonalSpeed;
+      } else {
+        player.targetVy = diagonalSpeed;
+      }
+
+      // Smooth vertical velocity interpolation for comfortable, fluid wave feel
+      const lerpFactor = 16;
+      player.vy += (player.targetVy - player.vy) * lerpFactor * dt;
+
+      // 3. Move Player Vertically
+      player.y += player.vy * dt;
+
+      // Bound player to ceiling and floor boundaries (leaving room for neon borders)
+      const borderTop = 40;
+      const borderBottom = height - 40;
+
+      if (player.y < borderTop + player.height / 2) {
+        player.y = borderTop + player.height / 2;
+        player.vy = 0;
+        // Collision or slide check can be added if spikes are placed on ceiling
+      }
+      if (player.y > borderBottom - player.height / 2) {
+        player.y = borderBottom - player.height / 2;
+        player.vy = 0;
+      }
+
+      // Calculate player visual rotation angle based on current vertical speed
+      // Rotates diagonally upwards or downwards
+      player.angle = Math.atan2(player.vy, player.baseSpeed) * 0.8;
+
+      // 4. Update Particle Wave Trail
+      // Add a trail point at the center back of the player triangle
+      const backOffsetAngle = player.angle + Math.PI;
+      const backX = player.x + Math.cos(backOffsetAngle) * (player.width / 2);
+      const backY = player.y + Math.sin(backOffsetAngle) * (player.width / 2);
+
+      player.trail.push({
+        x: backX,
+        y: backY,
+        time: Date.now()
+      });
+
+      // Maintain trail size (e.g. max 120 elements, or filtered by age)
+      const now = Date.now();
+      player.trail = player.trail.filter(pt => now - pt.time < 900); // 900ms lifetime
+
+      // 5. Emit small drift spark particles from back of player
+      if (Math.random() < 0.4) {
+        createSpark(backX, backY, -player.vy * 0.2);
+      }
+
+      // Update ambient/explosion particles
+      updatePlayerParticles(dt);
+    }
+
+    function createSpark(x, y, vyOffset) {
+      player.particles.push({
+        x: x,
+        y: y,
+        vx: -player.baseSpeed * 0.4 + (Math.random() - 0.5) * 60,
+        vy: vyOffset + (Math.random() - 0.5) * 80,
+        size: Math.random() * 3 + 1,
+        color: Math.random() < 0.5 ? 'rgba(0, 255, 102, 0.8)' : 'rgba(0, 243, 255, 0.8)',
+        alpha: 1,
+        life: 0.5 + Math.random() * 0.3 // seconds
+      });
+    }
+
+    function triggerCrashExplosion() {
+      player.isDead = true;
+      player.vy = 0;
+
+      // Stop background music and trigger explosive crash sound
+      stopSynthMusic();
+      playCrashSound();
+
+      // Emit a spectacular burst of concentric and random glowing neon particles
+      const count = 45;
+      for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 250 + 80;
+        player.particles.push({
+          x: player.x,
+          y: player.y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          size: Math.random() * 5 + 2,
+          color: Math.random() < 0.5 ? 'rgba(0, 255, 102, 0.9)' : 'rgba(0, 243, 255, 0.9)',
+          alpha: 1,
+          life: 1.0 + Math.random() * 0.8 // long life for explosion feedback
+        });
+      }
+
+      // Wait a moment then trigger game over state modal/overlay
+      setTimeout(() => {
+        if (currentGameState === STATE_PLAYING) {
+          triggerGameOverScreen();
+        }
+      }, 1200);
+    }
+
+    function updatePlayerParticles(dt) {
+      for (let i = player.particles.length - 1; i >= 0; i--) {
+        const p = player.particles[i];
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.life -= dt;
+        p.alpha = Math.max(0, p.life);
+
+        if (p.life <= 0) {
+          player.particles.splice(i, 1);
+        }
+      }
+    }
+
+    function drawPlayer(ctx) {
+      if (player.isDead) {
+        drawPlayerParticles(ctx);
+        return;
+      }
+
+      // Draw particle trail (Glowing wave path)
+      drawPlayerTrail(ctx);
+
+      // Draw actual triangle vehicle
+      ctx.save();
+      ctx.translate(player.x, player.y);
+      ctx.rotate(player.angle);
+
+      // Soft back glow beneath player vehicle
+      const glowGrad = ctx.createRadialGradient(0, 0, 2, 0, 0, player.width);
+      glowGrad.addColorStop(0, 'rgba(0, 255, 102, 0.6)');
+      glowGrad.addColorStop(1, 'rgba(0, 255, 102, 0)');
+      ctx.fillStyle = glowGrad;
+      ctx.beginPath();
+      ctx.arc(0, 0, player.width, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Sharp white vehicle borders with neon fill
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2.5;
+      ctx.fillStyle = 'rgba(5, 20, 18, 0.9)'; // Dark cyan core
+      ctx.shadowColor = 'rgba(0, 255, 102, 0.8)';
+      ctx.shadowBlur = 10;
+
+      // Draw stylized arrow/triangle
+      ctx.beginPath();
+      ctx.moveTo(player.width / 2, 0); // front tip
+      ctx.lineTo(-player.width / 2, -player.height / 2); // bottom back
+      ctx.lineTo(-player.width / 4, 0); // inner indent back
+      ctx.lineTo(-player.width / 2, player.height / 2); // top back
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Add cyan neon core outline details inside triangle
+      ctx.strokeStyle = 'var(--neon-cyan)';
+      ctx.shadowColor = 'rgba(0, 243, 255, 0.8)';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(player.width / 4, 0);
+      ctx.lineTo(-player.width / 4, -player.height / 4);
+      ctx.lineTo(-player.width / 6, 0);
+      ctx.lineTo(-player.width / 4, player.height / 4);
+      ctx.closePath();
+      ctx.stroke();
+
+      ctx.restore();
+
+      // Draw explosion particles
+      drawPlayerParticles(ctx);
+    }
+
+    function drawPlayerTrail(ctx) {
+      if (player.trail.length < 2) return;
+
+      ctx.save();
+      ctx.shadowBlur = 12;
+      ctx.shadowColor = 'rgba(0, 243, 255, 0.8)';
+      ctx.lineWidth = 3.5;
+
+      // Create smooth glowing neon trail using fading lines
+      for (let i = 1; i < player.trail.length; i++) {
+        const pt1 = player.trail[i - 1];
+        const pt2 = player.trail[i];
+
+        // Calculate age-based opacity
+        const age = Date.now() - pt2.time;
+        const opacity = Math.max(0, 1 - age / 900);
+
+        ctx.strokeStyle = `rgba(0, 243, 255, ${opacity * 0.85})`;
+        ctx.beginPath();
+        ctx.moveTo(pt1.x, pt1.y);
+        ctx.lineTo(pt2.x, pt2.y);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+
+    function drawPlayerParticles(ctx) {
+      ctx.save();
+      for (const p of player.particles) {
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = p.alpha;
+        ctx.shadowColor = p.color;
+        ctx.shadowBlur = 6;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    // Camera adjustment logic based on player Y coordinates to prevent tracking issues
+    function updateCamera(dt) {
+      // Camera X is tied precisely to player position minus margin
+      camera.x = player.x - 180;
+
+      // Smoothly interpolate camera Y towards player center
+      camera.targetY = player.y - height / 2;
+      // Clamp camera targetY to keep grid bounds cleanly in view
+      const clampLimit = 120;
+      if (camera.targetY < -clampLimit) camera.targetY = -clampLimit;
+      if (camera.targetY > clampLimit) camera.targetY = clampLimit;
+
+      camera.y += (camera.targetY - camera.y) * 8 * dt;
+    }
+
+    // --- LEVEL GENERATOR & PROCEDURAL ALGORITHMS ---
+    function generateLevel() {
+      obstacles = [];
+      levelProgress = 0;
+
+      if (currentGameMode === 'classic') {
+        levelLength = 4000 + (currentLevel * 1000); // Level 1 is 5000px, level 10 is 14000px
+
+        // Classic mode features deterministic, fun course designs
+        // Place start portal indicator
+        createLevelGates();
+
+        // Procedural course based on level difficulty (higher level = denser obstacles)
+        let cursorX = 600;
+        const seed = currentLevel * 12345;
+        let randomVal = Math.sin(seed) * 10000;
+
+        const getRand = () => {
+          randomVal = Math.sin(randomVal) * 10000;
+          return randomVal - Math.floor(randomVal);
+        };
+
+        while (cursorX < levelLength - 800) {
+          const typeRoll = getRand();
+
+          if (typeRoll < 0.3) {
+            // Ceiling or floor spike cluster
+            const count = Math.floor(getRand() * 3) + 1;
+            const isCeiling = getRand() < 0.5;
+            const spacing = 45;
+
+            for (let i = 0; i < count; i++) {
+              obstacles.push({
+                type: 'spike',
+                x: cursorX + i * spacing,
+                y: isCeiling ? 40 : height - 40,
+                width: 40,
+                height: 48,
+                dir: isCeiling ? 1 : -1, // 1 for pointing down from ceiling, -1 pointing up from floor
+                color: 'rgba(255, 0, 102, 0.85)' // glowing neon pink
+              });
+            }
+            cursorX += count * spacing + 250;
+
+          } else if (typeRoll < 0.6) {
+            // Horizontal pillars / corridor gaps (Block Dropouts)
+            const gapY = 150 + getRand() * 250; // gap height center
+            const gapHeight = Math.max(160, 260 - (currentLevel * 10)); // narrower gap on harder levels
+
+            // Top block
+            obstacles.push({
+              type: 'block',
+              x: cursorX,
+              y: 40,
+              width: 70 + getRand() * 90,
+              height: gapY - gapHeight / 2 - 40,
+              color: 'rgba(0, 243, 255, 0.85)' // neon cyan blocks
+            });
+
+            // Bottom block
+            obstacles.push({
+              type: 'block',
+              x: cursorX,
+              y: gapY + gapHeight / 2,
+              width: 70 + getRand() * 90,
+              height: (height - 40) - (gapY + gapHeight / 2),
+              color: 'rgba(0, 243, 255, 0.85)'
+            });
+
+            // Maybe a surprise spike inside the corridor
+            if (getRand() < 0.5 && currentLevel > 2) {
+              obstacles.push({
+                type: 'spike',
+                x: cursorX + 20,
+                y: gapY + gapHeight / 2 - 2,
+                width: 32,
+                height: 36,
+                dir: -1,
+                color: 'rgba(255, 0, 102, 0.85)'
+              });
+            }
+            cursorX += 300;
+
+          } else if (typeRoll < 0.8) {
+            // Floating center blocks / diamonds
+            const blockY = 180 + getRand() * 250;
+            const blockW = 80 + getRand() * 120;
+            const blockH = 60 + getRand() * 80;
+
+            obstacles.push({
+              type: 'block',
+              x: cursorX,
+              y: blockY,
+              width: blockW,
+              height: blockH,
+              color: 'rgba(0, 255, 102, 0.85)' // neon green block
+            });
+
+            // Spikes on top/bottom of floating block on harder levels
+            if (currentLevel > 4) {
+              if (getRand() < 0.5) {
+                obstacles.push({
+                  type: 'spike',
+                  x: cursorX + blockW / 2 - 16,
+                  y: blockY,
+                  width: 32,
+                  height: 36,
+                  dir: 1, // pointing down
+                  color: 'rgba(255, 0, 102, 0.85)'
+                });
+              } else {
+                obstacles.push({
+                  type: 'spike',
+                  x: cursorX + blockW / 2 - 16,
+                  y: blockY + blockH,
+                  width: 32,
+                  height: 36,
+                  dir: -1, // pointing up
+                  color: 'rgba(255, 0, 102, 0.85)'
+                });
+              }
+            }
+            cursorX += blockW + 280;
+
+          } else {
+            // Giant diagonal slalom passage (diagonal corridor layout)
+            const gapY = 250 + getRand() * 150;
+            obstacles.push({
+              type: 'block',
+              x: cursorX,
+              y: 40,
+              width: 140,
+              height: gapY - 100,
+              color: 'rgba(0, 243, 255, 0.85)'
+            });
+            obstacles.push({
+              type: 'block',
+              x: cursorX + 200,
+              y: gapY + 100,
+              width: 140,
+              height: (height - 40) - (gapY + 100),
+              color: 'rgba(0, 243, 255, 0.85)'
+            });
+            cursorX += 550;
+          }
+        }
+      } else {
+        // Endless Mode: Generated dynamically/infinitely or a massive procedural buffer
+        levelLength = 9999999; // effectively endless distance
+        generateEndlessBuffer(0, 50000);
+      }
+    }
+
+    function createLevelGates() {
+      // Starting platform/gate decoration
+      obstacles.push({
+        type: 'gate',
+        x: 400,
+        y: 40,
+        width: 15,
+        height: height - 80,
+        color: '#ffffff'
+      });
+    }
+
+    // Incremental generation buffer for endless and race modes
+    function generateEndlessBuffer(startX, length) {
+      let cursorX = Math.max(startX, 600);
+      const endX = startX + length;
+
+      while (cursorX < endX) {
+        const typeRoll = Math.random();
+
+        if (typeRoll < 0.28) {
+          // Spike groups
+          const count = Math.floor(Math.random() * 4) + 1;
+          const isCeiling = Math.random() < 0.5;
+          const spacing = 45;
+
+          for (let i = 0; i < count; i++) {
+            obstacles.push({
+              type: 'spike',
+              x: cursorX + i * spacing,
+              y: isCeiling ? 40 : height - 40,
+              width: 40,
+              height: 48,
+              dir: isCeiling ? 1 : -1,
+              color: 'rgba(255, 0, 102, 0.85)'
+            });
+          }
+          cursorX += count * spacing + 220;
+
+        } else if (typeRoll < 0.6) {
+          // Horizontal double blocks
+          const gapY = 160 + Math.random() * 240;
+          const gapHeight = 160 + Math.max(-40, 60 - (cursorX * 0.0001)); // gets narrower as distance increases!
+
+          obstacles.push({
+            type: 'block',
+            x: cursorX,
+            y: 40,
+            width: 80 + Math.random() * 100,
+            height: Math.max(10, gapY - gapHeight / 2 - 40),
+            color: 'rgba(0, 243, 255, 0.85)'
+          });
+
+          obstacles.push({
+            type: 'block',
+            x: cursorX,
+            y: gapY + gapHeight / 2,
+            width: 80 + Math.random() * 100,
+            height: Math.max(10, (height - 40) - (gapY + gapHeight / 2)),
+            color: 'rgba(0, 243, 255, 0.85)'
+          });
+          cursorX += 280;
+
+        } else if (typeRoll < 0.8) {
+          // Floating blockades
+          const blockY = 160 + Math.random() * 240;
+          const blockW = 85 + Math.random() * 130;
+          const blockH = 70 + Math.random() * 100;
+
+          obstacles.push({
+            type: 'block',
+            x: cursorX,
+            y: blockY,
+            width: blockW,
+            height: blockH,
+            color: 'rgba(0, 255, 102, 0.85)'
+          });
+          cursorX += blockW + 250;
+        } else {
+          // Sliding corridors
+          const gapY = 220 + Math.random() * 180;
+          obstacles.push({
+            type: 'block',
+            x: cursorX,
+            y: 40,
+            width: 150,
+            height: gapY - 110,
+            color: 'rgba(0, 243, 255, 0.85)'
+          });
+          obstacles.push({
+            type: 'block',
+            x: cursorX + 220,
+            y: gapY + 110,
+            width: 150,
+            height: (height - 40) - (gapY + 110),
+            color: 'rgba(0, 243, 255, 0.85)'
+          });
+          cursorX += 500;
+        }
+      }
+    }
+
+    // --- COLLISION DETECTION & LEVEL STATE TRACKER ---
+    function updateLevelAndCollisions() {
+      if (player.isDead) return;
+
+      // Calculate progress percentage
+      if (currentGameMode === 'classic') {
+        const startX = 150;
+        const totalDist = levelLength - 800 - startX;
+        const currentDist = player.x - startX;
+        levelProgress = Math.max(0, Math.min(100, (currentDist / totalDist) * 100));
+
+        // Update HUD indicators
+        document.getElementById('hud-progress-bar').style.width = `${levelProgress}%`;
+        document.getElementById('hud-progress-text').innerText = `${Math.floor(levelProgress)}%`;
+        document.getElementById('hud-level-text').innerText = `Level ${currentLevel}`;
+
+        // Check Victory/Goal condition
+        if (player.x >= levelLength - 800) {
+          triggerLevelCleared();
+        }
+      } else if (currentGameMode === 'endless') {
+        // Distance counter in meters survived
+        const startX = 150;
+        const distMeters = Math.floor((player.x - startX) / 10);
+        levelProgress = distMeters; // raw score
+
+        document.getElementById('hud-progress-bar').style.width = '100%';
+        document.getElementById('hud-progress-text').innerText = `${distMeters}m`;
+        document.getElementById('hud-level-text').innerText = `Endless Mode`;
+
+        // Garbage collection of older off-screen obstacles + infinite layout buffering
+        if (obstacles.length > 0 && obstacles[0].x < player.x - 1000) {
+          // Remove obstacles far behind the camera
+          obstacles = obstacles.filter(o => o.x >= player.x - 1000);
+        }
+
+        // Keep generating endless chunks ahead
+        const lastObstacleX = obstacles.length > 0 ? obstacles[obstacles.length - 1].x : player.x;
+        if (lastObstacleX < player.x + 3000) {
+          generateEndlessBuffer(lastObstacleX + 300, 10000);
+        }
+      }
+
+      // Collisions evaluation
+      // Cache player bounding box offsets (narrower than actual sprite for forgiving hitboxes)
+      const pW = player.width * 0.55;
+      const pH = player.height * 0.55;
+      const pX = player.x - pW / 2;
+      const pY = player.y - pH / 2;
+
+      // Loop only through obstacles visible on screen or near player (improves efficiency)
+      for (const obs of obstacles) {
+        if (obs.x < player.x - 100) continue;
+        if (obs.x > player.x + 250) continue;
+
+        if (obs.type === 'spike') {
+          // Spike is drawn as a triangle. Let's do a fast AABB intersection first
+          if (rectsIntersect(pX, pY, pW, pH, obs.x, obs.dir === 1 ? obs.y : obs.y - obs.height, obs.width, obs.height)) {
+            // Fine-grained triangle collision checking for accurate gameplay feedback
+            if (playerSpikeCollision(obs)) {
+              triggerCrashExplosion();
+              break;
+            }
+          }
+        } else if (obs.type === 'block') {
+          // Block is drawn as a solid rectangle
+          if (rectsIntersect(pX, pY, pW, pH, obs.x, obs.y, obs.width, obs.height)) {
+            triggerCrashExplosion();
+            break;
+          }
+        }
+      }
+
+      // Check boundary walls (ceiling/floor crash)
+      const ceilingCrash = player.y - pH / 2 <= 42;
+      const floorCrash = player.y + pH / 2 >= height - 42;
+      if (ceilingCrash || floorCrash) {
+        triggerCrashExplosion();
+      }
+    }
+
+    function rectsIntersect(x1, y1, w1, h1, x2, y2, w2, h2) {
+      return x1 < x2 + w2 && x1 + w1 > x2 && y1 < y2 + h2 && y1 + h1 > y2;
+    }
+
+    // Precise Triangle collision check
+    function playerSpikeCollision(spike) {
+      // Represent player center as target coordinate point
+      // Spike coordinates:
+      // Base line is at spike.y. Tip is at spike.y - spike.height (or + for top spike)
+      const tipY = spike.dir === 1 ? spike.y + spike.height : spike.y - spike.height;
+      const tipX = spike.x + spike.width / 2;
+
+      const baseX1 = spike.x;
+      const baseY1 = spike.y;
+
+      const baseX2 = spike.x + spike.width;
+      const baseY2 = spike.y;
+
+      // Triangle points: A(baseX1, baseY1), B(baseX2, baseY2), C(tipX, tipY)
+      // Check if player bounding box corners lie inside spike triangle
+      const corners = [
+        {x: player.x, y: player.y},
+        {x: player.x + player.width*0.25, y: player.y},
+        {x: player.x - player.width*0.25, y: player.y}
+      ];
+
+      for (const p of corners) {
+        if (pointInTriangle(p.x, p.y, baseX1, baseY1, baseX2, baseY2, tipX, tipY)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function pointInTriangle(px, py, x1, y1, x2, y2, x3, y3) {
+      const areaOrig = Math.abs((x1*(y2-y3) + x2*(y3-y1) + x3*(y1-y2))/2);
+      const area1 = Math.abs((px*(y2-y3) + x2*(y3-py) + x3*(py-y2))/2);
+      const area2 = Math.abs((x1*(py-y3) + px*(y3-y1) + x3*(y1-py))/2);
+      const area3 = Math.abs((x1*(y2-py) + x2*(py-y1) + px*(y1-y2))/2);
+      return Math.abs(areaOrig - (area1 + area2 + area3)) < 0.1;
+    }
+
+    // --- RENDER OBSTACLES ---
+    function drawObstacles(ctx) {
+      ctx.save();
+
+      for (const obs of obstacles) {
+        // Skip rendering if way off-screen
+        if (obs.x < camera.x - 100 || obs.x > camera.x + width + 100) continue;
+
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = obs.color;
+
+        if (obs.type === 'spike') {
+          // Spike outline / fill styling
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2.5;
+          ctx.fillStyle = obs.color;
+
+          ctx.beginPath();
+          if (obs.dir === 1) {
+            // Points down from ceiling
+            ctx.moveTo(obs.x, obs.y);
+            ctx.lineTo(obs.x + obs.width, obs.y);
+            ctx.lineTo(obs.x + obs.width / 2, obs.y + obs.height);
+          } else {
+            // Points up from floor
+            ctx.moveTo(obs.x, obs.y);
+            ctx.lineTo(obs.x + obs.width, obs.y);
+            ctx.lineTo(obs.x + obs.width / 2, obs.y - obs.height);
+          }
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+
+          // Accent neon core triangle
+          ctx.strokeStyle = 'var(--neon-cyan)';
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          if (obs.dir === 1) {
+            ctx.moveTo(obs.x + obs.width / 4, obs.y + 4);
+            ctx.lineTo(obs.x + 3 * obs.width / 4, obs.y + 4);
+            ctx.lineTo(obs.x + obs.width / 2, obs.y + obs.height * 0.7);
+          } else {
+            ctx.moveTo(obs.x + obs.width / 4, obs.y - 4);
+            ctx.lineTo(obs.x + 3 * obs.width / 4, obs.y - 4);
+            ctx.lineTo(obs.x + obs.width / 2, obs.y - obs.height * 0.7);
+          }
+          ctx.closePath();
+          ctx.stroke();
+
+        } else if (obs.type === 'block') {
+          // Drawing block with a dual border and high-tech glow
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2.5;
+          ctx.fillStyle = 'rgba(5, 20, 18, 0.95)'; // dark body
+
+          ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+          ctx.strokeRect(obs.x, obs.y, obs.width, obs.height);
+
+          // Glowing inner bounding box
+          ctx.strokeStyle = obs.color;
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(obs.x + 4, obs.y + 4, obs.width - 8, obs.height - 8);
+
+        } else if (obs.type === 'gate') {
+          // Start / End line gates
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 4;
+          ctx.fillStyle = 'rgba(0, 243, 255, 0.4)';
+          ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+          ctx.strokeRect(obs.x, obs.y, obs.width, obs.height);
+        }
+      }
+
+      ctx.restore();
+    }
+
+    // --- GAME SCREEN OVERLAYS TRIGGER CONTROLLERS ---
+    function triggerGameOverScreen() {
+      setGameState(STATE_GAMEOVER);
+
+      if (currentGameMode === 'classic') {
+        document.getElementById('fail-progress-val').innerText = `${Math.floor(levelProgress)}%`;
+        document.getElementById('fail-score-val').innerText = `Level ${currentLevel}`;
+      } else if (currentGameMode === 'endless') {
+        document.getElementById('fail-progress-val').innerText = `${Math.floor(levelProgress)}m`;
+        document.getElementById('fail-score-val').innerText = `High Score: ${endlessDistance}m`;
+        saveEndlessHighScore(levelProgress);
+      } else {
+        // Race Mode fail
+        document.getElementById('fail-progress-val').innerText = `Crashed`;
+        document.getElementById('fail-score-val').innerText = `Leaderboard Match`;
+      }
+
+      document.getElementById('gameover-modal').classList.add('active');
+    }
+
+    function triggerLevelCleared() {
+      setGameState(STATE_VICTORY);
+
+      // Stop background music and trigger victory chord sound
+      stopSynthMusic();
+      playClearedSound();
+
+      if (currentGameMode === 'classic') {
+        document.getElementById('win-mode-val').innerText = `Level ${currentLevel} Complete`;
+        document.getElementById('win-attempts-val').innerText = attemptCount;
+
+        // Save level progress to local storage
+        saveClassicProgress(currentLevel, 100);
+        document.getElementById('win-next-btn').style.display = currentLevel < 10 ? 'block' : 'none';
+      }
+
+      document.getElementById('win-modal').classList.add('active');
+    }
+
+    // Practice mode checkpoints integration
+    function togglePracticeMode(enabled) {
+      const ctrls = document.getElementById('practice-controls');
+      ctrls.style.visibility = enabled ? 'visible' : 'hidden';
+
+      if (!enabled) {
+        currentPracticeCheckpoint = null;
+      }
+    }
+
+    function placeCheckpoint() {
+      if (player.isDead) return;
+
+      // Play high-tech ding checkpoint sound
+      playCheckpointSound();
+
+      // Save deep copy of the player physics details and camera values
+      currentPracticeCheckpoint = {
+        x: player.x,
+        y: player.y,
+        vy: player.vy,
+        bgScrollX: bgScrollX,
+        bgScrollY: bgScrollY,
+        attempt: attemptCount
+      };
+
+      // Emit a sparkling green checkpoint banner flash
+      const pulseParticles = 12;
+      for (let i = 0; i < pulseParticles; i++) {
+        const angle = (i / pulseParticles) * Math.PI * 2;
+        player.particles.push({
+          x: player.x,
+          y: player.y,
+          vx: Math.cos(angle) * 120,
+          vy: Math.sin(angle) * 120,
+          size: 4,
+          color: 'var(--neon-cyan)',
+          alpha: 1,
+          life: 0.6
+        });
+      }
+      console.log("Checkpoint saved in practice mode");
+    }
+
+    function clearCheckpoints() {
+      currentPracticeCheckpoint = null;
+      console.log("Checkpoints wiped.");
+    }
+
+    // --- RACE MODE BOT AI ALGORITHMS ---
+    function initBots() {
+      bots = [];
+      if (currentGameMode !== 'race') {
+        document.getElementById('race-leaderboard').classList.remove('active');
+        return;
+      }
+
+      document.getElementById('race-leaderboard').classList.add('active');
+
+      const names = ["AeroBot", "HexRunner", "NeonDash", "GridCrasher"];
+      const colors = ["#ff0055", "#e5ff00", "#ff00ea", "#00ffff"];
+
+      for (let i = 0; i < 4; i++) {
+        bots.push({
+          name: names[i],
+          x: 150,
+          y: 200 + i * 80,
+          vy: 0,
+          width: 28,
+          height: 20,
+          angle: 0,
+          color: colors[i],
+          baseSpeed: 380 + Math.random() * 20, // slightly variable bot speeds
+          isDead: false,
+          lastDecisionTime: 0,
+          decisionInterval: 0.12 + Math.random() * 0.1, // react periodically
+          trail: [], // aesthetic trail for bots as well
+          targetVy: 390
+        });
+      }
+    }
+
+    function updateBots(dt) {
+      if (currentGameMode !== 'race') return;
+
+      const now = Date.now();
+
+      for (const bot of bots) {
+        if (bot.isDead) continue;
+
+        // 1. Forward horizontal movement
+        bot.x += bot.baseSpeed * dt;
+
+        // 2. Periodic smart AI navigation decisions
+        if (now - bot.lastDecisionTime > bot.decisionInterval * 1000) {
+          bot.lastDecisionTime = now;
+          makeAIDecision(bot);
+        }
+
+        // 3. Smooth vertical velocity adjustment
+        bot.vy += (bot.targetVy - bot.vy) * 14 * dt;
+        bot.y += bot.vy * dt;
+
+        // Clamp inside upper and lower level limits
+        const borderTop = 40;
+        const borderBottom = height - 40;
+        if (bot.y < borderTop + bot.height / 2) {
+          bot.y = borderTop + bot.height / 2;
+          bot.vy = 0;
+        }
+        if (bot.y > borderBottom - bot.height / 2) {
+          bot.y = borderBottom - bot.height / 2;
+          bot.vy = 0;
+        }
+
+        bot.angle = Math.atan2(bot.vy, bot.baseSpeed) * 0.8;
+
+        // Add visual wave trail point for the bot
+        bot.trail.push({ x: bot.x, y: bot.y, time: now });
+        bot.trail = bot.trail.filter(pt => now - pt.time < 500);
+
+        // 4. Collision checking with level obstacles for the bot
+        checkBotCollisions(bot);
+      }
+
+      // Update HUD leaderboard rows in Real-time
+      updateLeaderboardUI();
+    }
+
+    function makeAIDecision(bot) {
+      // Lookahead: detect obstacles in a horizontal beam ahead of the bot
+      const lookaheadDistance = 240;
+      let imminentObstacle = null;
+
+      for (const obs of obstacles) {
+        if (obs.x > bot.x && obs.x < bot.x + lookaheadDistance) {
+          // Check if obstacle is roughly vertically blocking the bot or near it
+          if (obs.type === 'block') {
+            // Check if vertical alignment overlap exists
+            if (bot.y > obs.y - 40 && bot.y < obs.y + obs.height + 40) {
+              imminentObstacle = obs;
+              break;
+            }
+          } else if (obs.type === 'spike') {
+            // Check if spike is on the same ceiling/floor side
+            const isCeilingSpike = obs.dir === 1;
+            if (isCeilingSpike && bot.y < 180) {
+              imminentObstacle = obs;
+              break;
+            }
+            if (!isCeilingSpike && bot.y > height - 180) {
+              imminentObstacle = obs;
+              break;
+            }
+          }
+        }
+      }
+
+      if (imminentObstacle) {
+        // Obstacle detected! Determine safest direction to dodge
+        if (imminentObstacle.type === 'block') {
+          // Check if we should go above or below the block
+          // Compare distance to gap edges
+          const distToCeiling = imminentObstacle.y - 40;
+          const distToFloor = (height - 40) - (imminentObstacle.y + imminentObstacle.height);
+
+          if (distToCeiling > distToFloor) {
+            // Safe passage is above the obstacle
+            bot.targetVy = -390; // steer upwards
+          } else {
+            // Safe passage is below the obstacle
+            bot.targetVy = 390; // steer downwards
+          }
+        } else {
+          // Spike dodge: steer away from the spike side
+          if (imminentObstacle.dir === 1) {
+            bot.targetVy = 390; // ceiling spike: steer down
+          } else {
+            bot.targetVy = -390; // floor spike: steer up
+          }
+        }
+      } else {
+        // No immediate threat: keep moving in a smooth sinusoidal wave inside bounds for realistic motion
+        if (bot.y < 160) {
+          bot.targetVy = 390; // steer down
+        } else if (bot.y > height - 160) {
+          bot.targetVy = -390; // steer up
+        } else {
+          // Occasional random trajectory switch to mimic human play
+          if (Math.random() < 0.15) {
+            bot.targetVy = -bot.targetVy;
+          }
+        }
+      }
+    }
+
+    function checkBotCollisions(bot) {
+      const bW = bot.width * 0.6;
+      const bH = bot.height * 0.6;
+      const bX = bot.x - bW / 2;
+      const bY = bot.y - bH / 2;
+
+      for (const obs of obstacles) {
+        if (obs.x < bot.x - 50) continue;
+        if (obs.x > bot.x + 150) continue;
+
+        if (obs.type === 'block') {
+          if (rectsIntersect(bX, bY, bW, bH, obs.x, obs.y, obs.width, obs.height)) {
+            killBot(bot);
+            break;
+          }
+        } else if (obs.type === 'spike') {
+          if (rectsIntersect(bX, bY, bW, bH, obs.x, obs.dir === 1 ? obs.y : obs.y - obs.height, obs.width, obs.height)) {
+            killBot(bot);
+            break;
+          }
+        }
+      }
+
+      // Border bounds crash
+      if (bot.y - bH/2 <= 42 || bot.y + bH/2 >= height - 42) {
+        killBot(bot);
+      }
+    }
+
+    function killBot(bot) {
+      bot.isDead = true;
+      bot.vy = 0;
+
+      // Emit short aesthetic explosion of sparks for the bot
+      for (let i = 0; i < 15; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        player.particles.push({
+          x: bot.x,
+          y: bot.y,
+          vx: Math.cos(angle) * 140,
+          vy: Math.sin(angle) * 140,
+          size: 2.5,
+          color: bot.color,
+          alpha: 1,
+          life: 0.6
+        });
+      }
+    }
+
+    function updateLeaderboardUI() {
+      if (currentGameMode !== 'race') return;
+
+      // Compile competitors list including the human player
+      const runners = [];
+      if (!player.isDead) {
+        runners.push({ name: "YOU", x: player.x, isDead: false, color: 'var(--neon-green)' });
+      } else {
+        runners.push({ name: "YOU", x: player.x, isDead: true, color: 'var(--neon-green)' });
+      }
+
+      for (const b of bots) {
+        runners.push({ name: b.name, x: b.x, isDead: b.isDead, color: b.color });
+      }
+
+      // Sort racers by horizontal position x (descending)
+      runners.sort((r1, r2) => r2.x - r1.x);
+
+      const listContainer = document.getElementById('leaderboard-list');
+      listContainer.innerHTML = '';
+
+      runners.forEach((runner, idx) => {
+        const row = document.createElement('div');
+        row.className = `leaderboard-row ${runner.name === 'YOU' ? 'player' : ''}`;
+        row.style.color = runner.isDead ? '#666' : runner.color;
+
+        row.innerHTML = `
+          <span>${idx + 1}. ${runner.name}</span>
+          <span>${runner.isDead ? 'CRASH' : Math.floor(runner.x / 10) + 'm'}</span>
+        `;
+        listContainer.appendChild(row);
+      });
+
+      // Win Condition: If player finishes the race (levelLength limit)
+      if (!player.isDead && player.x >= levelLength - 800) {
+        // Evaluate standings position of YOU
+        const standings = runners.findIndex(r => r.name === "YOU");
+        if (standings === 0) {
+          // We won! Increment wins tracker
+          incrementRaceWins();
+          triggerLevelCleared();
+        } else {
+          // Finished but lost
+          setGameState(STATE_GAMEOVER);
+          document.getElementById('fail-progress-val').innerText = `Finished #${standings + 1}`;
+          document.getElementById('fail-score-val').innerText = `Winner: ${runners[0].name}`;
+          document.getElementById('gameover-modal').classList.add('active');
+        }
+      }
+    }
+
+    // --- AUDIO SYSTEM (WEB AUDIO API SYNTHESIZER) ---
+    function initAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    // High-tech electronic background soundtrack loop (Procedural Sequencer)
+    function startSynthMusic() {
+      if (isMuted) return;
+      initAudioContext();
+      stopSynthMusic(); // Clear any previous active intervals
+
+      synthBeatsCount = 0;
+
+      // Fast, driving techno-cyberpunk beat at 145 BPM (roughly every 207ms per beat)
+      synthIntervalId = setInterval(() => {
+        if (currentGameState !== STATE_PLAYING || isMuted) return;
+
+        // Play synthetic elements based on sequencer steps
+        playSequencerStep();
+      }, 207);
+    }
+
+    function stopSynthMusic() {
+      if (synthIntervalId) {
+        clearInterval(synthIntervalId);
+        synthIntervalId = null;
+      }
+    }
+
+    function playSequencerStep() {
+      try {
+        const step = synthBeatsCount % 16;
+        synthBeatsCount++;
+
+        // 1. Driving Kick Drum on every quarter beat (0, 4, 8, 12)
+        if (step % 4 === 0) {
+          playKickDrum();
+        }
+
+        // 2. High-hat splash on offbeats (2, 6, 10, 14)
+        if (step % 4 === 2) {
+          playHiHat();
+        }
+
+        // 3. Fast arpeggiating electronic bassline melody notes
+        // Choose notes from a driving dark minor/Phrygian scale
+        const melody = [55, 55, 65, 55, 58, 55, 62, 58, 55, 55, 65, 55, 58, 65, 70, 65];
+        const freq = melody[step];
+        playBassSynth(freq);
+
+        // 4. Occasional lead laser sound fx randomly
+        if (step === 7 || step === 15) {
+          if (Math.random() < 0.6) {
+            playLeadLaser(freq * 3);
+          }
+        }
+      } catch (e) {
+        console.error("Sequencer error:", e);
+      }
+    }
+
+    function playKickDrum() {
+      const osc = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+
+      osc.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+      // Sweeping pitch down rapidly for kick impact
+      osc.frequency.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+
+      gainNode.gain.setValueAtTime(0.35, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.16);
+
+      osc.start(audioCtx.currentTime);
+      osc.stop(audioCtx.currentTime + 0.18);
+    }
+
+    function playHiHat() {
+      // White noise synthesis for cymbal high hat
+      const bufferSize = audioCtx.sampleRate * 0.05; // very short splash
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+
+      const noiseNode = audioCtx.createBufferSource();
+      noiseNode.buffer = buffer;
+
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'highpass';
+      filter.frequency.value = 7500; // bright metallic hiss
+
+      const gainNode = audioCtx.createGain();
+      gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
+
+      noiseNode.connect(filter);
+      filter.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      noiseNode.start(audioCtx.currentTime);
+      noiseNode.stop(audioCtx.currentTime + 0.05);
+    }
+
+    function playBassSynth(freq) {
+      const osc = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+
+      osc.type = 'sawtooth'; // gritty synth texture
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+      // Slide/glissando effect
+      osc.frequency.exponentialRampToValueAtTime(freq * 0.98, audioCtx.currentTime + 0.18);
+
+      // Lowpass filter for bass heavy warm vibes
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = 650;
+
+      osc.connect(filter);
+      filter.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      gainNode.gain.setValueAtTime(0.12, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.19);
+
+      osc.start(audioCtx.currentTime);
+      osc.stop(audioCtx.currentTime + 0.2);
+    }
+
+    function playLeadLaser(freq) {
+      const osc = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(freq * 0.2, audioCtx.currentTime + 0.15);
+
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.value = 1200;
+
+      osc.connect(filter);
+      filter.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      gainNode.gain.setValueAtTime(0.04, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.16);
+
+      osc.start(audioCtx.currentTime);
+      osc.stop(audioCtx.currentTime + 0.17);
+    }
+
+    // Custom sound effect synthesizers triggered on gameplay events
+    function playCrashSound() {
+      if (isMuted) return;
+      initAudioContext();
+
+      // Massive explosive low distortion noise
+      const osc = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(140, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(10, audioCtx.currentTime + 0.85);
+
+      gainNode.gain.setValueAtTime(0.4, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.88);
+
+      osc.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      osc.start(audioCtx.currentTime);
+      osc.stop(audioCtx.currentTime + 0.9);
+
+      // Add a higher-frequency hiss for explosion fire sparks
+      const bufferSize = audioCtx.sampleRate * 0.4;
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+
+      const noiseSource = audioCtx.createBufferSource();
+      noiseSource.buffer = buffer;
+
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = 1800;
+
+      const noiseGain = audioCtx.createGain();
+      noiseGain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.38);
+
+      noiseSource.connect(filter);
+      filter.connect(noiseGain);
+      noiseGain.connect(audioCtx.destination);
+
+      noiseSource.start(audioCtx.currentTime);
+      noiseSource.stop(audioCtx.currentTime + 0.4);
+    }
+
+    function playClearedSound() {
+      if (isMuted) return;
+      initAudioContext();
+
+      // Glorious ascending perfect major chords / electronic victory bells
+      const chord = [329.63, 392.00, 523.25, 659.25]; // C major triad
+      const now = audioCtx.currentTime;
+
+      chord.forEach((note, idx) => {
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(note, now + idx * 0.08);
+        osc.frequency.exponentialRampToValueAtTime(note * 1.5, now + idx * 0.08 + 0.4);
+
+        gainNode.gain.setValueAtTime(0.12, now + idx * 0.08);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.5);
+
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        osc.start(now + idx * 0.08);
+        osc.stop(now + idx * 0.08 + 0.55);
+      });
+    }
+
+    function playCheckpointSound() {
+      if (isMuted) return;
+      initAudioContext();
+
+      const osc = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+      osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.06); // G5
+
+      gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.22);
+
+      osc.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      osc.start(audioCtx.currentTime);
+      osc.stop(audioCtx.currentTime + 0.25);
+    }
+
+    // --- DRAW BOTS ---
+    function drawBots(ctx) {
+      if (currentGameMode !== 'race') return;
+
+      for (const bot of bots) {
+        if (bot.isDead) continue;
+
+        // Draw individual bot trail
+        if (bot.trail.length >= 2) {
+          ctx.save();
+          ctx.shadowBlur = 8;
+          ctx.shadowColor = bot.color;
+          ctx.lineWidth = 2.5;
+          for (let i = 1; i < bot.trail.length; i++) {
+            const pt1 = bot.trail[i - 1];
+            const pt2 = bot.trail[i];
+            const age = Date.now() - pt2.time;
+            const opacity = Math.max(0, 1 - age / 500);
+            ctx.strokeStyle = bot.color;
+            ctx.globalAlpha = opacity * 0.75;
+            ctx.beginPath();
+            ctx.moveTo(pt1.x, pt1.y);
+            ctx.lineTo(pt2.x, pt2.y);
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+
+        // Draw bot triangle
+        ctx.save();
+        ctx.translate(bot.x, bot.y);
+        ctx.rotate(bot.angle);
+
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.fillStyle = bot.color;
+        ctx.shadowColor = bot.color;
+        ctx.shadowBlur = 8;
+
+        ctx.beginPath();
+        ctx.moveTo(bot.width / 2, 0);
+        ctx.lineTo(-bot.width / 2, -bot.height / 2);
+        ctx.lineTo(-bot.width / 4, 0);
+        ctx.lineTo(-bot.width / 2, bot.height / 2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.restore();
+      }
+    }
+
+    // --- OVERRIDE LEVEL INITIALIZER ---
+    function initGameElements() {
+      initPlayer();
+      generateLevel();
+      initBots();
+
+      // If practice mode checkpoint exists and we're restarting the level
+      if (document.getElementById('practice-mode-chk').checked && currentPracticeCheckpoint) {
+        player.x = currentPracticeCheckpoint.x;
+        player.y = currentPracticeCheckpoint.y;
+        player.vy = currentPracticeCheckpoint.vy;
+        attemptCount = currentPracticeCheckpoint.attempt;
+        // Adjust camera instantly
+        camera.x = player.x - 180;
+        camera.y = player.y - height / 2;
+      }
+    }
+
+    function pauseGame() {
+      if (currentGameState !== STATE_PLAYING) return;
+      currentGameState = STATE_PAUSED;
+      stopSynthMusic();
+
+      if (currentGameMode === 'classic') {
+        document.getElementById('pause-progress-val').innerText = `${Math.floor(levelProgress)}%`;
+      } else if (currentGameMode === 'endless') {
+        document.getElementById('pause-progress-val').innerText = `${Math.floor(levelProgress)}m`;
+      } else {
+        document.getElementById('pause-progress-val').innerText = `RACING`;
+      }
+      document.getElementById('pause-mode-val').innerText = currentGameMode.toUpperCase();
+      document.getElementById('pause-modal').classList.add('active');
+    }
+
+    function resumeGame() {
+      if (currentGameState !== STATE_PAUSED) return;
+      hideAllModals();
+      currentGameState = STATE_PLAYING;
+      startSynthMusic();
+    }
+
+    function restartLevel() {
+      hideAllModals();
+      attemptCount++;
+      initGameElements();
+      setGameState(STATE_PLAYING);
+    }
+
+    function quitToMenu() {
+      hideAllModals();
+      openMainMenu();
+    }
+
+    function nextLevel() {
+      hideAllModals();
+      if (currentLevel < 10) {
+        startClassicLevel(currentLevel + 1);
+      } else {
+        openLevelSelect();
+      }
+    }
+
+    function toggleAudio() {
+      isMuted = !isMuted;
+      document.getElementById('audio-toggle').innerHTML = isMuted ? '<span>🔇</span> Audio: OFF' : '<span>🔊</span> Audio: ON';
+    }
+
+    // --- RENDER & UPDATE ---
+    function update(dt) {
+      if (currentGameState !== STATE_PLAYING) return;
+
+      updatePlayerPhysics(dt);
+      updateBots(dt);
+      updateLevelAndCollisions();
+      updateCamera(dt);
+
+      // Parallax background offsets tied to player/camera movement
+      bgScrollX = camera.x;
+      bgScrollY = camera.y;
+    }
+
+    function render() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Save context state for responsive scaling
+      ctx.save();
+      ctx.scale(scaleX, scaleY);
+
+      // Draw background pattern
+      if (hexPatternCanvas) {
+        ctx.save();
+        // Parallax background: scrolls slower than camera movement
+        const offsetLeft = -(bgScrollX * 0.3) % hexPatternWidth;
+        const offsetTop = -(bgScrollY * 0.3) % hexPatternHeight;
+
+        ctx.fillStyle = ctx.createPattern(hexPatternCanvas, 'repeat');
+        ctx.translate(offsetLeft, offsetTop);
+        ctx.fillRect(-offsetLeft, -offsetTop, width, height);
+        ctx.restore();
+      }
+
+      // 1. Draw level boundary bounds (Ceiling and Floor lines)
+      ctx.save();
+      ctx.translate(-camera.x, -camera.y);
+
+      // Ceiling and floor glowing lanes
+      ctx.strokeStyle = 'rgba(0, 255, 102, 0.4)';
+      ctx.lineWidth = 4;
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = 'rgba(0, 255, 102, 0.8)';
+
+      // Top boundary
+      ctx.beginPath();
+      ctx.moveTo(camera.x - 200, 40);
+      ctx.lineTo(camera.x + width + 200, 40);
+      ctx.stroke();
+
+      // Bottom boundary
+      ctx.beginPath();
+      ctx.moveTo(camera.x - 200, height - 40);
+      ctx.lineTo(camera.x + width + 200, height - 40);
+      ctx.stroke();
+
+      ctx.restore();
+
+      // 2. Render Gameplay elements inside camera coordinates
+      ctx.save();
+      ctx.translate(-camera.x, -camera.y);
+
+      // Draw game obstacles
+      drawObstacles(ctx);
+
+      // Draw bot competitors
+      drawBots(ctx);
+
+      // Draw player and their trail/particles
+      drawPlayer(ctx);
+
+      ctx.restore();
+
+      ctx.restore();
+    }
+  </script>
+</body>
+</html>
