@@ -421,6 +421,7 @@
       position: relative;
       transition: all 0.2s ease;
       font-weight: 800;
+      padding: 5px;
     }
 
     .level-box:hover {
@@ -430,36 +431,113 @@
     }
 
     .level-num {
-      font-size: 28px;
+      font-size: 24px;
       color: #fff;
     }
 
     .level-percent {
       font-size: 11px;
       color: var(--neon-green);
-      margin-top: 4px;
+      margin-top: 2px;
       font-weight: 600;
     }
 
+    .level-price {
+      font-size: 11px;
+      color: #ffd700;
+      margin-top: 4px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      text-shadow: 0 0 5px rgba(255, 215, 0, 0.4);
+    }
+
     .level-box.locked {
-      opacity: 0.5;
-      cursor: not-allowed;
-      border-color: rgba(255, 255, 255, 0.05);
+      background: rgba(15, 25, 23, 0.8);
+      border-color: rgba(255, 215, 0, 0.2);
     }
 
     .level-box.locked:hover {
-      transform: none;
-      box-shadow: none;
-      border-color: rgba(255, 255, 255, 0.05);
+      transform: scale(1.05);
+      border-color: #ffd700;
+      box-shadow: 0 0 12px rgba(255, 215, 0, 0.3);
     }
 
     .level-box .lock-icon {
       position: absolute;
-      top: 8px;
-      right: 8px;
-      width: 14px;
-      height: 14px;
-      fill: #888;
+      top: 6px;
+      right: 6px;
+      width: 12px;
+      height: 12px;
+      fill: #ffd700;
+    }
+
+    /* Coin Display in Menus and HUD */
+    .coin-display-wrapper {
+      position: absolute;
+      top: 30px;
+      right: 150px;
+      height: 44px;
+      padding: 0 16px;
+      border-radius: 8px;
+      background: rgba(10, 35, 32, 0.7);
+      border: 2px solid #ffd700;
+      color: #ffd700;
+      font-size: 16px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      z-index: 50;
+      box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+      transition: all 0.2s ease;
+    }
+
+    .coin-display-wrapper:hover {
+      box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+      transform: scale(1.02);
+    }
+
+    .hud-coin-display {
+      font-size: 14px;
+      font-weight: 800;
+      color: #ffd700;
+      background: rgba(255, 215, 0, 0.1);
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 215, 0, 0.2);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      text-shadow: 0 0 4px rgba(255, 215, 0, 0.4);
+    }
+
+    /* Coins Gained Animation */
+    @keyframes coinFloatUp {
+      0% {
+        transform: translate(-50%, 0) scale(0.8);
+        opacity: 0;
+      }
+      20% {
+        opacity: 1;
+        transform: translate(-50%, -20px) scale(1.1);
+      }
+      100% {
+        transform: translate(-50%, -80px) scale(1);
+        opacity: 0;
+      }
+    }
+
+    .coin-float-text {
+      position: absolute;
+      font-weight: 900;
+      font-size: 18px;
+      color: #ffd700;
+      text-shadow: 0 0 8px rgba(255, 215, 0, 0.8), 0 2px 4px rgba(0,0,0,0.8);
+      pointer-events: none;
+      z-index: 999;
+      animation: coinFloatUp 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
     }
 
     /* HUD (Heads-Up Display) overlay during gameplay */
@@ -1213,6 +1291,13 @@
     <!-- Main Menu Screen Overlay -->
     <div id="main-menu-screen" class="screen">
       <button id="pwa-install-btn" class="pwa-install-btn" onclick="triggerPWAInstall()">📥 Install App</button>
+
+      <!-- Coin Balance Indicator -->
+      <div id="menu-coin-display" class="coin-display-wrapper">
+        <span style="font-size: 18px;">🪙</span>
+        <span id="menu-coin-val">0</span>
+      </div>
+
       <button class="fullscreen-btn" onclick="toggleFullscreen()" title="Toggle Fullscreen">⛶</button>
       <div></div> <!-- Spacer -->
 
@@ -1231,7 +1316,7 @@
         <div class="mode-card classic-card" onclick="openLevelSelect()">
           <div class="mode-icon">🏆</div>
           <div class="mode-title">Classic</div>
-          <div class="mode-desc">Fly through 30 hand-crafted & procedural obstacle courses with progressively higher speeds.</div>
+          <div class="mode-desc">Fly through 50 hand-crafted & procedural obstacle courses with progressively higher speeds.</div>
         </div>
 
         <div class="mode-card endless-card" onclick="startEndlessMode()">
@@ -1309,6 +1394,11 @@
             <div id="hud-progress-bar" class="progress-bar"></div>
             <div id="hud-progress-text" class="progress-text">0%</div>
           </div>
+        </div>
+
+        <div class="hud-coin-display">
+          <span>🪙</span>
+          <span id="hud-coin-val">0</span>
         </div>
 
         <div class="practice-toggle-box">
@@ -1468,11 +1558,13 @@
     const SAVE_CLASSIC_PROGRESS = 'plo_io_classic_progress';
     const SAVE_ENDLESS_HI_SCORE = 'plo_io_endless_hiscore';
     const SAVE_RACE_WINS = 'plo_io_race_wins';
+    const SAVE_COINS = 'plo_io_coins';
 
     // Game stats trackers
     let levelProgress = 0; // 0 to 100
     let endlessDistance = 0; // meters survived
     let raceWinsCount = 0;
+    let ploCoins = 0;
 
     // --- AUDIO SYSTEM (WEB AUDIO API SYNTHESIZER) ---
     let audioCtx = null;
@@ -1642,21 +1734,27 @@
     }
 
     // --- PROCEDURAL HONEYCOMB DESIGN ---
-    function createHexagonPattern() {
+    function createHexagonPattern(customTheme = null) {
       hexPatternCanvas = document.createElement('canvas');
       hexPatternCanvas.width = hexPatternWidth;
       hexPatternCanvas.height = hexPatternHeight;
       const hCtx = hexPatternCanvas.getContext('2d');
 
-      // Draw dark dark teal background
-      hCtx.fillStyle = '#051412';
+      // Draw dark dark teal background or thematic background base
+      let strokeColor = 'rgba(0, 255, 102, 0.12)';
+      if (customTheme) {
+        hCtx.fillStyle = '#040b09'; // extremely dark themed background
+        strokeColor = customTheme.bgPatternColor;
+      } else {
+        hCtx.fillStyle = '#051412';
+      }
       hCtx.fillRect(0, 0, hexPatternWidth, hexPatternHeight);
 
       const r = 24; // hexagon radius
       const h = r * Math.sqrt(3);
       const w = r * 1.5;
 
-      hCtx.strokeStyle = 'rgba(0, 255, 102, 0.12)';
+      hCtx.strokeStyle = strokeColor;
       hCtx.lineWidth = 1.5;
 
       // Draw tiled hexagons
@@ -1855,10 +1953,23 @@
         const savedProgress = localStorage.getItem(SAVE_CLASSIC_PROGRESS);
         if (!savedProgress) {
           const defaultProgress = {};
-          for (let i = 1; i <= 30; i++) {
+          for (let i = 1; i <= 50; i++) {
             defaultProgress[i] = i === 1 ? 0 : null; // Level 1 unlocked (0% progress), others locked (null)
           }
           localStorage.setItem(SAVE_CLASSIC_PROGRESS, JSON.stringify(defaultProgress));
+        } else {
+          // Expand existing progress to 50 levels if less
+          const data = JSON.parse(savedProgress);
+          let modified = false;
+          for (let i = 1; i <= 50; i++) {
+            if (data[i] === undefined) {
+              data[i] = null;
+              modified = true;
+            }
+          }
+          if (modified) {
+            localStorage.setItem(SAVE_CLASSIC_PROGRESS, JSON.stringify(data));
+          }
         }
 
         const savedHiScore = localStorage.getItem(SAVE_ENDLESS_HI_SCORE);
@@ -1870,8 +1981,66 @@
         if (savedRaceWins) {
           raceWinsCount = parseInt(savedRaceWins, 10);
         }
+
+        const savedCoins = localStorage.getItem(SAVE_COINS);
+        if (savedCoins) {
+          ploCoins = parseInt(savedCoins, 10);
+        } else {
+          ploCoins = 0;
+          localStorage.setItem(SAVE_COINS, "0");
+        }
+        updateCoinUI();
       } catch (e) {
         console.error("Failed to load local storage game data:", e);
+      }
+    }
+
+    function updateCoinUI() {
+      document.getElementById('menu-coin-val').innerText = ploCoins;
+      document.getElementById('hud-coin-val').innerText = ploCoins;
+    }
+
+    function addCoins(amount) {
+      ploCoins += amount;
+      localStorage.setItem(SAVE_COINS, ploCoins.toString());
+      updateCoinUI();
+      triggerCoinFloat(amount);
+    }
+
+    function triggerCoinFloat(amount) {
+      const container = document.getElementById('game-container');
+      const floatText = document.createElement('div');
+      floatText.className = 'coin-float-text';
+      floatText.innerText = `+${amount} 🪙`;
+      floatText.style.left = '50%';
+      floatText.style.top = '50%';
+      container.appendChild(floatText);
+      setTimeout(() => {
+        floatText.remove();
+      }, 1250);
+    }
+
+    function buyLevel(lvlNum, cost) {
+      if (ploCoins < cost) {
+        alert("Not enough PLO Coins! Keep playing to earn more.");
+        return;
+      }
+      if (confirm(`Unlock Level ${lvlNum} for ${cost} PLO Coins?`)) {
+        ploCoins -= cost;
+        localStorage.setItem(SAVE_COINS, ploCoins.toString());
+        updateCoinUI();
+
+        // Unlock in progression
+        try {
+          const data = JSON.parse(localStorage.getItem(SAVE_CLASSIC_PROGRESS));
+          if (data) {
+            data[lvlNum] = 0; // unlocked
+            localStorage.setItem(SAVE_CLASSIC_PROGRESS, JSON.stringify(data));
+            renderLevelGrid();
+          }
+        } catch (e) {
+          console.error(e);
+        }
       }
     }
 
@@ -1884,11 +2053,12 @@
           if (percent > currentBest) {
             data[level] = percent;
           }
-          // Unlock next level if this one is completed
-          if (percent >= 100 && level < 30) {
-            if (data[level + 1] === null) {
-              data[level + 1] = 0;
-            }
+          // In the store system, we don't automatically unlock the next level
+          // but we award coins!
+          if (percent >= 100) {
+            // Earning: +10 base coins per level completed + dynamic bonuses based on level difficulty
+            const coinsEarned = 10 + level * 2;
+            addCoins(coinsEarned);
           }
           localStorage.setItem(SAVE_CLASSIC_PROGRESS, JSON.stringify(data));
           renderLevelGrid();
@@ -1925,15 +2095,22 @@
       document.getElementById('race-stats').innerText = `Wins: ${raceWinsCount}`;
     }
 
+    function getLevelCost(lvlNum) {
+      // Level 1 is free/unlocked. Level 2-50 costs coins.
+      // We can do a scaling cost: 50 * level_number
+      return (lvlNum - 1) * 40;
+    }
+
     function renderLevelGrid() {
       const grid = document.getElementById('level-grid');
       grid.innerHTML = '';
 
       try {
         const data = JSON.parse(localStorage.getItem(SAVE_CLASSIC_PROGRESS)) || {};
-        for (let i = 1; i <= 30; i++) {
+        for (let i = 1; i <= 50; i++) {
           const progress = data[i];
           const isLocked = progress === null;
+          const cost = getLevelCost(i);
 
           const box = document.createElement('div');
           box.className = `level-box ${isLocked ? 'locked' : ''}`;
@@ -1952,11 +2129,19 @@
             box.appendChild(percent);
           } else {
             // Locked design
+            box.onclick = () => buyLevel(i, cost);
+
             const num = document.createElement('div');
             num.className = 'level-num';
-            num.style.color = '#555';
+            num.style.color = '#777';
             num.innerText = i;
             box.appendChild(num);
+
+            // Price Display
+            const price = document.createElement('div');
+            price.className = 'level-price';
+            price.innerHTML = `🪙${cost}`;
+            box.appendChild(price);
 
             // Lock SVG Icon
             box.innerHTML += `
@@ -1964,6 +2149,20 @@
                 <path d="M12 2c-2.76 0-5 2.24-5 5v3H6c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-8c0-1.1-.9-2-2-2h-1V7c0-2.76-2.24-5-5-5zm-3 5c0-1.66 1.34-3 3-3s3 1.34 3 3v3H9V7zm3 10c-.55 0-1-.45-1-1v-2c0-.55.45-1 1-1s1 .45 1 1v2c0 .55-.45 1-1 1z"/>
               </svg>
             `;
+          }
+
+          // Color boxes based on their thematic zones to look absolutely stunning in grid!
+          // Forest: 1-8 (Green), Haunted: 9-16 (Purple), Cyber: 17-25 (Cyan), Volcano: 26-33 (Red), Ice: 34-41 (White/Blue), Space: 42-50 (Pink)
+          let themeColor = 'rgba(0, 255, 102, 0.4)';
+          if (i <= 8) themeColor = 'rgba(0, 255, 102, 0.4)';
+          else if (i <= 16) themeColor = 'rgba(180, 0, 255, 0.4)';
+          else if (i <= 25) themeColor = 'rgba(0, 243, 255, 0.4)';
+          else if (i <= 33) themeColor = 'rgba(255, 50, 0, 0.4)';
+          else if (i <= 41) themeColor = 'rgba(150, 220, 255, 0.4)';
+          else themeColor = 'rgba(255, 0, 150, 0.4)';
+
+          if (!isLocked) {
+            box.style.borderColor = themeColor;
           }
 
           grid.appendChild(box);
@@ -2161,18 +2360,42 @@
         createSpark(backX, backY, -player.vy * 0.2);
       }
 
+      // Emit thematic ambient particle drift
+      if (currentGameMode === 'classic' && Math.random() < 0.15) {
+        const theme = getLevelTheme(currentLevel);
+        player.particles.push({
+          x: player.x + 800 + Math.random() * 200,
+          y: Math.random() * height,
+          vx: -player.baseSpeed * 0.7 - Math.random() * 100,
+          vy: (Math.random() - 0.5) * 40,
+          size: Math.random() * 2 + 0.5,
+          color: theme.spikeColor,
+          alpha: 0.7,
+          life: 2.0
+        });
+      }
+
       // Update ambient/explosion particles
       updatePlayerParticles(dt);
     }
 
     function createSpark(x, y, vyOffset) {
+      // Determine spark color based on the current active thematic map
+      let sparkColor = 'rgba(0, 255, 102, 0.8)';
+      if (currentGameMode === 'classic') {
+        const theme = getLevelTheme(currentLevel);
+        sparkColor = theme.spikeColor;
+      } else {
+        sparkColor = Math.random() < 0.5 ? 'rgba(0, 255, 102, 0.8)' : 'rgba(0, 243, 255, 0.8)';
+      }
+
       player.particles.push({
         x: x,
         y: y,
         vx: -player.baseSpeed * 0.4 + (Math.random() - 0.5) * 60,
         vy: vyOffset + (Math.random() - 0.5) * 80,
         size: Math.random() * 3 + 1,
-        color: Math.random() < 0.5 ? 'rgba(0, 255, 102, 0.8)' : 'rgba(0, 243, 255, 0.8)',
+        color: sparkColor,
         alpha: 1,
         life: 0.5 + Math.random() * 0.3 // seconds
       });
@@ -2499,7 +2722,7 @@
           generateProceduralObstacles(5200, levelLength - 1000, currentLevel);
 
         } else {
-          // LEVELS 6 TO 30: Fully procedural maps based on a deterministic seed!
+          // LEVELS 6 TO 50: Fully procedural maps based on a deterministic seed!
           generateProceduralObstacles(600, levelLength - 1000, currentLevel);
         }
 
@@ -2520,6 +2743,70 @@
       }
     }
 
+    function getLevelTheme(levelNum) {
+      // 1-8 Forest (Green/woodland)
+      // 9-16 Haunted (Purple)
+      // 17-25 Cyber (Neon Blue)
+      // 26-33 Volcano (Red/Orange)
+      // 34-41 Ice (Cyan/Light Blue)
+      // 42-50 Space (Indigo/Pink)
+      if (levelNum <= 8) {
+        return {
+          name: "Forest",
+          spikeColor: "rgba(0, 255, 102, 0.85)",
+          blockColor: "rgba(34, 139, 34, 0.85)",
+          bgPatternColor: "rgba(0, 255, 102, 0.08)",
+          pitchModifier: 0.8, // lower deep pitches
+          ambientParticles: "green"
+        };
+      } else if (levelNum <= 16) {
+        return {
+          name: "Haunted",
+          spikeColor: "rgba(180, 0, 255, 0.85)",
+          blockColor: "rgba(75, 0, 130, 0.85)",
+          bgPatternColor: "rgba(180, 0, 255, 0.08)",
+          pitchModifier: 0.6, // eerie slow pitches
+          ambientParticles: "purple"
+        };
+      } else if (levelNum <= 25) {
+        return {
+          name: "Cyber",
+          spikeColor: "rgba(0, 243, 255, 0.85)",
+          blockColor: "rgba(10, 35, 60, 0.85)",
+          bgPatternColor: "rgba(0, 243, 255, 0.08)",
+          pitchModifier: 1.1, // sharp cyberpunk pitch
+          ambientParticles: "cyan"
+        };
+      } else if (levelNum <= 33) {
+        return {
+          name: "Volcano",
+          spikeColor: "rgba(255, 50, 0, 0.85)",
+          blockColor: "rgba(128, 0, 0, 0.85)",
+          bgPatternColor: "rgba(255, 50, 0, 0.08)",
+          pitchModifier: 0.9, // booming drums and pitch
+          ambientParticles: "red"
+        };
+      } else if (levelNum <= 41) {
+        return {
+          name: "Ice",
+          spikeColor: "rgba(150, 220, 255, 0.85)",
+          blockColor: "rgba(70, 130, 180, 0.85)",
+          bgPatternColor: "rgba(150, 220, 255, 0.08)",
+          pitchModifier: 1.3, // bright crystal clear high pitch
+          ambientParticles: "white"
+        };
+      } else {
+        return {
+          name: "Space",
+          spikeColor: "rgba(255, 0, 150, 0.85)",
+          blockColor: "rgba(40, 10, 80, 0.85)",
+          bgPatternColor: "rgba(255, 0, 150, 0.08)",
+          pitchModifier: 1.5, // fast starward pitches
+          ambientParticles: "indigo"
+        };
+      }
+    }
+
     function generateProceduralObstacles(startX, endX, levelNum) {
       let seed = levelNum * 314.159 + 42;
       function seededRandom() {
@@ -2528,7 +2815,8 @@
       }
 
       let cursorX = startX;
-      const speedRatio = Math.min(1, (levelNum - 5) / 25); // 0 at Level 5, 1 at Level 30
+      const speedRatio = Math.min(1, (levelNum - 5) / 45); // 0 at Level 5, 1 at Level 50
+      const theme = getLevelTheme(levelNum);
 
       while (cursorX < endX) {
         const r = seededRandom();
@@ -2546,7 +2834,7 @@
               width: 40,
               height: 48,
               dir: isCeiling ? 1 : -1,
-              color: 'rgba(255, 0, 102, 0.85)'
+              color: theme.spikeColor
             });
           }
           cursorX += count * spacing + 180;
@@ -2563,7 +2851,7 @@
             y: 40,
             width: blockWidth,
             height: gapY - gapHeight / 2 - 40,
-            color: 'rgba(0, 243, 255, 0.85)'
+            color: theme.blockColor
           });
           obstacles.push({
             type: 'block',
@@ -2571,7 +2859,7 @@
             y: gapY + gapHeight / 2,
             width: blockWidth,
             height: (height - 40) - (gapY + gapHeight / 2),
-            color: 'rgba(0, 243, 255, 0.85)'
+            color: theme.blockColor
           });
           cursorX += blockWidth + 260 - speedRatio * 50;
 
@@ -2587,7 +2875,7 @@
             y: colY,
             width: blockWidth,
             height: colHeight,
-            color: 'rgba(0, 255, 102, 0.85)'
+            color: theme.blockColor
           });
 
           // Add a spike on top or bottom
@@ -2599,7 +2887,7 @@
             width: 32,
             height: 36,
             dir: spikeOnTop ? 1 : -1,
-            color: 'rgba(255, 0, 102, 0.85)'
+            color: theme.spikeColor
           });
           cursorX += blockWidth + 280 - speedRatio * 60;
 
@@ -2615,7 +2903,7 @@
             y: 40,
             width: blockWidth,
             height: topH,
-            color: 'rgba(0, 243, 255, 0.85)'
+            color: theme.blockColor
           });
           obstacles.push({
             type: 'block',
@@ -2623,7 +2911,7 @@
             y: height - bottomH - 40,
             width: blockWidth,
             height: bottomH,
-            color: 'rgba(0, 243, 255, 0.85)'
+            color: theme.blockColor
           });
           cursorX += 450 - speedRatio * 80;
 
@@ -2639,7 +2927,7 @@
             y: 40,
             width: tunnelLength,
             height: tunnelY - tunnelGap / 2 - 40,
-            color: 'rgba(0, 243, 255, 0.85)'
+            color: theme.blockColor
           });
           obstacles.push({
             type: 'block',
@@ -2647,7 +2935,7 @@
             y: tunnelY + tunnelGap / 2,
             width: tunnelLength,
             height: (height - 40) - (tunnelY + tunnelGap / 2),
-            color: 'rgba(0, 243, 255, 0.85)'
+            color: theme.blockColor
           });
 
           if (seededRandom() < 0.55) {
@@ -2658,7 +2946,7 @@
               width: 32,
               height: 36,
               dir: seededRandom() < 0.5 ? 1 : -1,
-              color: 'rgba(255, 0, 102, 0.85)'
+              color: theme.spikeColor
             });
           }
           cursorX += tunnelLength + 280 - speedRatio * 50;
@@ -2977,6 +3265,11 @@
       } else if (currentGameMode === 'endless') {
         document.getElementById('fail-progress-val').innerText = `${Math.floor(levelProgress)}m`;
         document.getElementById('fail-score-val').innerText = `High Score: ${endlessDistance}m`;
+        // Earning: distance-based rewards in Endless Mode (e.g. +1 coin per 50 meters)
+        const endlessCoins = Math.floor(levelProgress / 50);
+        if (endlessCoins > 0) {
+          addCoins(endlessCoins);
+        }
         saveEndlessHighScore(levelProgress);
       } else {
         // Race Mode fail
@@ -3000,7 +3293,7 @@
 
         // Save level progress to local storage
         saveClassicProgress(currentLevel, 100);
-        document.getElementById('win-next-btn').style.display = currentLevel < 30 ? 'block' : 'none';
+        document.getElementById('win-next-btn').style.display = currentLevel < 50 ? 'block' : 'none';
       }
 
       document.getElementById('win-modal').classList.add('active');
@@ -3291,6 +3584,8 @@
         if (standings === 0) {
           // We won! Increment wins tracker
           incrementRaceWins();
+          // Bonus rewards for winning Race Mode (+15 PLO coins)
+          addCoins(15);
           triggerLevelCleared();
         } else {
           // Finished but lost
@@ -3353,8 +3648,14 @@
 
         // 3. Fast arpeggiating electronic bassline melody notes
         // Choose notes from a driving dark minor/Phrygian scale
+        // Pitch shift depends on the active map theme!
+        let modifier = 1.0;
+        if (currentGameMode === 'classic') {
+          const theme = getLevelTheme(currentLevel);
+          modifier = theme.pitchModifier;
+        }
         const melody = [55, 55, 65, 55, 58, 55, 62, 58, 55, 55, 65, 55, 58, 65, 70, 65];
-        const freq = melody[step];
+        const freq = melody[step] * modifier;
         playBassSynth(freq);
 
         // 4. Occasional lead laser sound fx randomly
@@ -3615,6 +3916,15 @@
     // --- OVERRIDE LEVEL INITIALIZER ---
     function initGameElements() {
       initPlayer();
+
+      // Recreate custom background pattern to match the theme of the level
+      if (currentGameMode === 'classic') {
+        const theme = getLevelTheme(currentLevel);
+        createHexagonPattern(theme);
+      } else {
+        createHexagonPattern(null);
+      }
+
       generateLevel();
       initBots();
 
@@ -3667,8 +3977,16 @@
 
     function nextLevel() {
       hideAllModals();
-      if (currentLevel < 30) {
-        startClassicLevel(currentLevel + 1);
+      if (currentLevel < 50) {
+        // Only start if unlocked! Otherwise prompt level select
+        try {
+          const data = JSON.parse(localStorage.getItem(SAVE_CLASSIC_PROGRESS)) || {};
+          if (data[currentLevel + 1] !== null) {
+            startClassicLevel(currentLevel + 1);
+            return;
+          }
+        } catch (e) {}
+        openLevelSelect();
       } else {
         openLevelSelect();
       }
