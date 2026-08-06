@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>plo.io - Geometry Wave Runner</title>
+  <link rel="manifest" href="manifest.json">
   <style>
     :root {
       --neon-green: #00ff66;
@@ -284,6 +285,45 @@
       border-color: var(--neon-cyan);
       box-shadow: 0 0 10px rgba(0, 243, 255, 0.4);
       color: var(--neon-cyan);
+    }
+
+    /* PWA Install Button Styling */
+    .pwa-install-btn {
+      position: absolute;
+      top: 30px;
+      right: 90px;
+      height: 44px;
+      padding: 0 16px;
+      border-radius: 8px;
+      background: rgba(10, 35, 32, 0.7);
+      border: 2px solid var(--neon-cyan);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: none; /* Initially hidden, visible only if PWA install prompt is triggered */
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      z-index: 50;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+    }
+
+    .pwa-install-btn:hover {
+      background: var(--neon-cyan);
+      box-shadow: 0 0 15px rgba(0, 243, 255, 0.6);
+      color: var(--neon-dark);
+    }
+
+    @media (max-height: 500px) {
+      .pwa-install-btn {
+        height: 32px;
+        font-size: 11px;
+        padding: 0 10px;
+        top: 15px;
+        right: 60px;
+      }
     }
 
     /* Sound/Music Settings controls in menu */
@@ -1172,6 +1212,7 @@
 
     <!-- Main Menu Screen Overlay -->
     <div id="main-menu-screen" class="screen">
+      <button id="pwa-install-btn" class="pwa-install-btn" onclick="triggerPWAInstall()">📥 Install App</button>
       <button class="fullscreen-btn" onclick="toggleFullscreen()" title="Toggle Fullscreen">⛶</button>
       <div></div> <!-- Spacer -->
 
@@ -1469,6 +1510,61 @@
       y: 0,
       targetY: 0,
     };
+
+    // --- PWA SERVICE WORKER & DEFERRED PROMPT SYSTEM ---
+    let deferredPrompt = null;
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then((reg) => console.log('[Service Worker] Registered successfully:', reg.scope))
+          .catch((err) => console.error('[Service Worker] Registration failed:', err));
+      });
+    }
+
+    // Capture beforeinstallprompt event to enable custom Install button
+    window.addEventListener('beforeinstallprompt', (e) => {
+      // Prevent standard browser auto-install prompt
+      e.preventDefault();
+      deferredPrompt = e;
+
+      // Render our custom "📥 Install App" button visible in the Main Menu
+      const installBtn = document.getElementById('pwa-install-btn');
+      if (installBtn) {
+        installBtn.style.display = 'flex';
+      }
+    });
+
+    function triggerPWAInstall() {
+      if (!deferredPrompt) return;
+
+      // Render native browser prompt dialog
+      deferredPrompt.prompt();
+
+      deferredPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          console.log('[PWA] User accepted the install prompt');
+        } else {
+          console.log('[PWA] User dismissed the install prompt');
+        }
+
+        // Wipe deferredPrompt so it triggers once
+        deferredPrompt = null;
+        const installBtn = document.getElementById('pwa-install-btn');
+        if (installBtn) {
+          installBtn.style.display = 'none';
+        }
+      });
+    }
+
+    // Hide button if the app has already been installed/launched as a PWA
+    window.addEventListener('appinstalled', (e) => {
+      console.log('[PWA] Successfully installed plo.io as a native app!');
+      const installBtn = document.getElementById('pwa-install-btn');
+      if (installBtn) {
+        installBtn.style.display = 'none';
+      }
+    });
 
     // --- INITIALIZATION ---
     window.addEventListener('load', () => {
