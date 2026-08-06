@@ -43,12 +43,9 @@
     /* Game Canvas */
     canvas {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
       display: block;
       z-index: 1;
+      touch-action: none;
     }
 
     /* Overlay Screens and UI elements */
@@ -320,16 +317,18 @@
 
     .level-grid {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 15px;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 12px;
       width: 100%;
-      max-width: 750px;
+      max-width: 780px;
       padding: 10px;
+      max-height: 65vh;
+      overflow-y: auto;
     }
 
     @media (max-width: 600px) {
       .level-grid {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(5, 1fr);
       }
       .cards-container {
         flex-direction: column;
@@ -805,11 +804,335 @@
       border-radius: 6px;
       border: 1px solid rgba(0, 243, 255, 0.2);
     }
+
+    /* Mobile Landscape optimizations for screens and HUD */
+    @media (max-height: 600px) {
+      #main-menu-screen {
+        justify-content: flex-start;
+        gap: 10px;
+        overflow-y: auto;
+        padding: 15px 10px;
+      }
+      .title-logo {
+        font-size: 36px;
+      }
+      .subtitle {
+        font-size: 12px;
+        letter-spacing: 1px;
+      }
+      .name-input-container {
+        margin: 5px 0;
+        max-width: 240px;
+      }
+      .name-input-field {
+        padding: 6px 12px;
+        font-size: 13px;
+      }
+      .name-input-label {
+        font-size: 9px;
+        margin-bottom: 4px;
+      }
+      .cards-container {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+        max-width: 800px;
+        padding: 0;
+      }
+      .mode-card {
+        padding: 8px 12px;
+        border-radius: 10px;
+        max-width: 220px;
+        flex: 1 1 200px;
+        border-width: 1px;
+      }
+      .mode-card:hover {
+        transform: translateY(-2px);
+      }
+      .mode-icon {
+        font-size: 20px;
+        margin-bottom: 4px;
+        display: inline-block;
+        vertical-align: middle;
+      }
+      .mode-title {
+        font-size: 14px;
+        margin-bottom: 2px;
+        display: inline-block;
+        vertical-align: middle;
+        margin-left: 5px;
+      }
+      .mode-desc {
+        font-size: 11px;
+        line-height: 1.2;
+        display: block;
+      }
+      .best-score-tag {
+        margin-top: 4px;
+        font-size: 9px;
+        padding: 2px 6px;
+      }
+      .social-footer {
+        gap: 8px;
+        margin-top: 5px;
+      }
+      .social-title {
+        font-size: 9px;
+        letter-spacing: 1px;
+      }
+      .social-btn {
+        width: 32px;
+        height: 32px;
+      }
+      .social-btn svg {
+        width: 14px;
+        height: 14px;
+      }
+      .settings-row {
+        margin-top: 2px;
+      }
+      .settings-btn {
+        padding: 4px 10px;
+        font-size: 11px;
+      }
+    }
+
+    @media (max-height: 500px) {
+      #hud {
+        padding: 5px 15px;
+      }
+      .hud-player-name {
+        font-size: 10px;
+        padding: 2px 6px;
+      }
+      .pause-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+      }
+      .hud-level-indicator {
+        font-size: 10px;
+        letter-spacing: 1px;
+      }
+      .progress-container {
+        height: 12px;
+      }
+      .progress-text {
+        font-size: 9px;
+      }
+      .practice-label {
+        font-size: 9px;
+      }
+      .practice-checkbox-custom {
+        width: 16px;
+        height: 16px;
+      }
+      .practice-toggle-box input[type="checkbox"]:checked + .practice-checkbox-custom::after {
+        top: 1px;
+        left: 4px;
+        width: 4px;
+        height: 7px;
+      }
+      .hud-practice-controls {
+        gap: 4px;
+        margin-bottom: 5px;
+      }
+      .practice-action-btn {
+        padding: 4px 8px;
+        font-size: 9px;
+      }
+      .hud-center-info {
+        max-width: 30%;
+      }
+
+      /* Level select screen optimized landscape */
+      #level-select-screen {
+        padding: 15px 20px;
+        justify-content: flex-start;
+        gap: 10px;
+        overflow-y: auto;
+      }
+      #level-select-screen .title-logo {
+        font-size: 28px !important;
+      }
+      #level-select-screen .subtitle {
+        font-size: 10px;
+      }
+      .back-btn {
+        top: 15px;
+        left: 15px;
+        padding: 4px 10px;
+        font-size: 11px;
+      }
+      .level-grid {
+        grid-template-columns: repeat(10, 1fr);
+        gap: 6px;
+        max-width: 720px;
+        padding: 5px;
+        max-height: 55vh;
+        overflow-y: auto;
+      }
+      .level-box {
+        border-radius: 8px;
+        border-width: 1.5px;
+      }
+      .level-num {
+        font-size: 18px;
+      }
+      .level-percent {
+        font-size: 8px;
+        margin-top: 2px;
+      }
+      .level-box .lock-icon {
+        width: 10px;
+        height: 10px;
+        top: 4px;
+        right: 4px;
+      }
+
+      /* Modals optimized landscape */
+      .modal-content {
+        padding: 15px 20px;
+        max-width: 380px;
+        border-radius: 12px;
+      }
+      .modal-title {
+        font-size: 22px;
+        margin-bottom: 5px;
+      }
+      .modal-stats {
+        margin: 10px 0;
+        padding: 8px 12px;
+      }
+      .stat-line {
+        font-size: 12px;
+        margin-bottom: 4px;
+      }
+      .modal-buttons {
+        gap: 6px;
+        margin-top: 10px;
+      }
+      .modal-btn {
+        padding: 8px;
+        font-size: 12px;
+      }
+    }
+
+    /* Rotate Device Overlay */
+    #rotate-device-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: radial-gradient(circle, rgba(10,35,30,0.98) 0%, rgba(5,20,18,1) 100%);
+      z-index: 9999;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      color: #fff;
+      padding: 20px;
+    }
+
+    .rotate-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      max-width: 320px;
+    }
+
+    .phone-icon-wrapper {
+      position: relative;
+      width: 80px;
+      height: 80px;
+      margin-bottom: 10px;
+    }
+
+    .phone-icon {
+      width: 48px;
+      height: 48px;
+      fill: var(--neon-green);
+      filter: drop-shadow(0 0 10px rgba(0, 255, 102, 0.6));
+      animation: rotatePhone 2.5s ease-in-out infinite;
+    }
+
+    .rotate-arrow {
+      position: absolute;
+      top: 10px;
+      right: 5px;
+      width: 32px;
+      height: 32px;
+      fill: var(--neon-cyan);
+      filter: drop-shadow(0 0 8px rgba(0, 243, 255, 0.6));
+      animation: rotateArrow 2.5s ease-in-out infinite;
+    }
+
+    #rotate-device-overlay h2 {
+      font-size: 24px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #fff;
+      text-shadow: var(--neon-glow);
+    }
+
+    #rotate-device-overlay p {
+      font-size: 14px;
+      color: #8faeab;
+      line-height: 1.5;
+    }
+
+    @keyframes rotatePhone {
+      0%, 100% {
+        transform: rotate(0deg);
+      }
+      40%, 60% {
+        transform: rotate(90deg);
+      }
+    }
+
+    @keyframes rotateArrow {
+      0%, 100% {
+        opacity: 0.3;
+        transform: scale(0.9);
+      }
+      40%, 60% {
+        opacity: 1;
+        transform: scale(1.1) rotate(45deg);
+      }
+    }
+
+    /* Media query to activate only in mobile portrait */
+    @media (max-width: 900px) and (orientation: portrait) {
+      #rotate-device-overlay {
+        display: flex;
+      }
+    }
   </style>
 </head>
 <body>
 
   <div id="game-container">
+    <!-- Rotate Device Overlay for Mobile Portrait Mode -->
+    <div id="rotate-device-overlay">
+      <div class="rotate-content">
+        <div class="phone-icon-wrapper">
+          <svg class="phone-icon" viewBox="0 0 24 24">
+            <path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/>
+          </svg>
+          <svg class="rotate-arrow" viewBox="0 0 24 24">
+            <path d="M19 8l-4 4h3c0 3.31-2.69 6-6 6-1.01 0-1.97-.25-2.8-.7l-1.46 1.46C8.97 19.54 10.43 20 12 20c4.42 0 8-3.58 8-8h3l-4-4z"/>
+          </svg>
+        </div>
+        <h2>Rotate Your Device</h2>
+        <p>Please rotate your device to landscape to play plo.io</p>
+      </div>
+    </div>
+
     <!-- The HTML5 Game Canvas -->
     <canvas id="gameCanvas"></canvas>
 
@@ -832,7 +1155,7 @@
         <div class="mode-card classic-card" onclick="openLevelSelect()">
           <div class="mode-icon">🏆</div>
           <div class="mode-title">Classic</div>
-          <div class="mode-desc">Fly through 10 hand-crafted obstacle courses with progressively higher speeds.</div>
+          <div class="mode-desc">Fly through 30 hand-crafted & procedural obstacle courses with progressively higher speeds.</div>
         </div>
 
         <div class="mode-card endless-card" onclick="startEndlessMode()">
@@ -1147,14 +1470,38 @@
     function initCanvas() {
       // Setup scaled dimensions preserving a 16:9 virtual ratio
       const container = document.getElementById('game-container');
-      const rect = container.getBoundingClientRect();
+      const containerWidth = container.clientWidth;
+      const containerHeight = container.clientHeight;
 
-      canvas.width = rect.width;
-      canvas.height = rect.height;
+      const targetAspect = 16 / 9;
+      let renderWidth = containerWidth;
+      let renderHeight = containerHeight;
 
-      // Calculate responsive scale factor
-      scaleX = canvas.width / width;
-      scaleY = canvas.height / height;
+      if (containerWidth / containerHeight > targetAspect) {
+        // Window is wider than 16:9 - bound by height
+        renderHeight = containerHeight;
+        renderWidth = containerHeight * targetAspect;
+      } else {
+        // Window is taller than 16:9 - bound by width
+        renderWidth = containerWidth;
+        renderHeight = containerWidth / targetAspect;
+      }
+
+      // Style canvas element size to fit perfect aspect ratio
+      canvas.style.width = `${renderWidth}px`;
+      canvas.style.height = `${renderHeight}px`;
+
+      // Keep canvas element centered in the screen
+      canvas.style.left = `${(containerWidth - renderWidth) / 2}px`;
+      canvas.style.top = `${(containerHeight - renderHeight) / 2}px`;
+
+      // Keep backing store resolution fixed at high-res 1200x675 virtual dimensions
+      canvas.width = width;
+      canvas.height = height;
+
+      // Since canvas backing store is exactly 1200x675, drawing scale factor is always 1
+      scaleX = 1;
+      scaleY = 1;
     }
 
     // --- PROCEDURAL HONEYCOMB DESIGN ---
@@ -1303,7 +1650,7 @@
         const savedProgress = localStorage.getItem(SAVE_CLASSIC_PROGRESS);
         if (!savedProgress) {
           const defaultProgress = {};
-          for (let i = 1; i <= 10; i++) {
+          for (let i = 1; i <= 30; i++) {
             defaultProgress[i] = i === 1 ? 0 : null; // Level 1 unlocked (0% progress), others locked (null)
           }
           localStorage.setItem(SAVE_CLASSIC_PROGRESS, JSON.stringify(defaultProgress));
@@ -1333,7 +1680,7 @@
             data[level] = percent;
           }
           // Unlock next level if this one is completed
-          if (percent >= 100 && level < 10) {
+          if (percent >= 100 && level < 30) {
             if (data[level + 1] === null) {
               data[level + 1] = 0;
             }
@@ -1379,7 +1726,7 @@
 
       try {
         const data = JSON.parse(localStorage.getItem(SAVE_CLASSIC_PROGRESS)) || {};
-        for (let i = 1; i <= 10; i++) {
+        for (let i = 1; i <= 30; i++) {
           const progress = data[i];
           const isLocked = progress === null;
 
@@ -1907,8 +2254,8 @@
           obstacles.push({ type: 'block', x: 4500, y: 40, width: 150, height: 250, color: 'rgba(0, 243, 255, 0.85)' });
           obstacles.push({ type: 'block', x: 4500, y: height - 150, width: 150, height: 110, color: 'rgba(0, 243, 255, 0.85)' });
 
-        } else {
-          // LEVEL 5+: The Ultimate Run (Dense, rapid maneuvers, combine all mechanics)
+        } else if (currentLevel === 5) {
+          // LEVEL 5: Handcrafted baseline segment + procedural extension
           obstacles.push({ type: 'spike', x: 600, y: height - 40, width: 40, height: 48, dir: -1, color: 'rgba(255, 0, 102, 0.85)' });
           obstacles.push({ type: 'spike', x: 750, y: 40, width: 40, height: 48, dir: 1, color: 'rgba(255, 0, 102, 0.85)' });
 
@@ -1942,6 +2289,13 @@
 
           obstacles.push({ type: 'block', x: 4600, y: 40, width: 300, height: 220, color: 'rgba(0, 243, 255, 0.85)' });
           obstacles.push({ type: 'block', x: 4600, y: height - 220, width: 300, height: 180, color: 'rgba(0, 243, 255, 0.85)' });
+
+          // Continue procedurally from x = 5200 to levelLength - 1000
+          generateProceduralObstacles(5200, levelLength - 1000, currentLevel);
+
+        } else {
+          // LEVELS 6 TO 30: Fully procedural maps based on a deterministic seed!
+          generateProceduralObstacles(600, levelLength - 1000, currentLevel);
         }
 
         // Final gate placement
@@ -1958,6 +2312,152 @@
         // Endless Mode: Generated dynamically/infinitely or a massive procedural buffer
         levelLength = 9999999; // effectively endless distance
         generateEndlessBuffer(0, 50000);
+      }
+    }
+
+    function generateProceduralObstacles(startX, endX, levelNum) {
+      let seed = levelNum * 314.159 + 42;
+      function seededRandom() {
+        let x = Math.sin(seed++) * 10000;
+        return x - Math.floor(x);
+      }
+
+      let cursorX = startX;
+      const speedRatio = Math.min(1, (levelNum - 5) / 25); // 0 at Level 5, 1 at Level 30
+
+      while (cursorX < endX) {
+        const r = seededRandom();
+
+        if (r < 0.22) {
+          // Archetype A: Alternating floor and ceiling spikes
+          const count = 2 + Math.floor(seededRandom() * 4);
+          const spacing = 180 - speedRatio * 50;
+          for (let i = 0; i < count; i++) {
+            const isCeiling = (i % 2 === 0);
+            obstacles.push({
+              type: 'spike',
+              x: cursorX + i * spacing,
+              y: isCeiling ? 40 : height - 40,
+              width: 40,
+              height: 48,
+              dir: isCeiling ? 1 : -1,
+              color: 'rgba(255, 0, 102, 0.85)'
+            });
+          }
+          cursorX += count * spacing + 180;
+
+        } else if (r < 0.45) {
+          // Archetype B: Double Blocks (Gateways with narrow opening)
+          const gapHeight = Math.max(135, 220 - speedRatio * 75);
+          const gapY = 160 + seededRandom() * (height - 320);
+          const blockWidth = 70 + Math.floor(seededRandom() * 80);
+
+          obstacles.push({
+            type: 'block',
+            x: cursorX,
+            y: 40,
+            width: blockWidth,
+            height: gapY - gapHeight / 2 - 40,
+            color: 'rgba(0, 243, 255, 0.85)'
+          });
+          obstacles.push({
+            type: 'block',
+            x: cursorX,
+            y: gapY + gapHeight / 2,
+            width: blockWidth,
+            height: (height - 40) - (gapY + gapHeight / 2),
+            color: 'rgba(0, 243, 255, 0.85)'
+          });
+          cursorX += blockWidth + 260 - speedRatio * 50;
+
+        } else if (r < 0.65) {
+          // Archetype C: Floating mid-columns with spikes
+          const colHeight = 110 + seededRandom() * 110;
+          const colY = 140 + seededRandom() * (height - colHeight - 280);
+          const blockWidth = 90;
+
+          obstacles.push({
+            type: 'block',
+            x: cursorX,
+            y: colY,
+            width: blockWidth,
+            height: colHeight,
+            color: 'rgba(0, 255, 102, 0.85)'
+          });
+
+          // Add a spike on top or bottom
+          const spikeOnTop = seededRandom() < 0.5;
+          obstacles.push({
+            type: 'spike',
+            x: cursorX + 25,
+            y: spikeOnTop ? colY : colY + colHeight,
+            width: 32,
+            height: 36,
+            dir: spikeOnTop ? 1 : -1,
+            color: 'rgba(255, 0, 102, 0.85)'
+          });
+          cursorX += blockWidth + 280 - speedRatio * 60;
+
+        } else if (r < 0.85) {
+          // Archetype D: Slalom (Staggered ceiling then floor blocks)
+          const blockWidth = 110;
+          const topH = 140 + seededRandom() * 110;
+          const bottomH = 140 + seededRandom() * 110;
+
+          obstacles.push({
+            type: 'block',
+            x: cursorX,
+            y: 40,
+            width: blockWidth,
+            height: topH,
+            color: 'rgba(0, 243, 255, 0.85)'
+          });
+          obstacles.push({
+            type: 'block',
+            x: cursorX + 220,
+            y: height - bottomH - 40,
+            width: blockWidth,
+            height: bottomH,
+            color: 'rgba(0, 243, 255, 0.85)'
+          });
+          cursorX += 450 - speedRatio * 80;
+
+        } else {
+          // Archetype E: Tunnel corridor (A narrow stretch of ceiling & floor blocks)
+          const tunnelLength = 250 + Math.floor(seededRandom() * 200);
+          const tunnelGap = Math.max(150, 210 - speedRatio * 55);
+          const tunnelY = 170 + seededRandom() * (height - 340);
+
+          obstacles.push({
+            type: 'block',
+            x: cursorX,
+            y: 40,
+            width: tunnelLength,
+            height: tunnelY - tunnelGap / 2 - 40,
+            color: 'rgba(0, 243, 255, 0.85)'
+          });
+          obstacles.push({
+            type: 'block',
+            x: cursorX,
+            y: tunnelY + tunnelGap / 2,
+            width: tunnelLength,
+            height: (height - 40) - (tunnelY + tunnelGap / 2),
+            color: 'rgba(0, 243, 255, 0.85)'
+          });
+
+          if (seededRandom() < 0.55) {
+            obstacles.push({
+              type: 'spike',
+              x: cursorX + tunnelLength / 2,
+              y: seededRandom() < 0.5 ? tunnelY - tunnelGap / 2 : tunnelY + tunnelGap / 2,
+              width: 32,
+              height: 36,
+              dir: seededRandom() < 0.5 ? 1 : -1,
+              color: 'rgba(255, 0, 102, 0.85)'
+            });
+          }
+          cursorX += tunnelLength + 280 - speedRatio * 50;
+        }
       }
     }
 
@@ -2295,7 +2795,7 @@
 
         // Save level progress to local storage
         saveClassicProgress(currentLevel, 100);
-        document.getElementById('win-next-btn').style.display = currentLevel < 10 ? 'block' : 'none';
+        document.getElementById('win-next-btn').style.display = currentLevel < 30 ? 'block' : 'none';
       }
 
       document.getElementById('win-modal').classList.add('active');
@@ -2962,7 +3462,7 @@
 
     function nextLevel() {
       hideAllModals();
-      if (currentLevel < 10) {
+      if (currentLevel < 30) {
         startClassicLevel(currentLevel + 1);
       } else {
         openLevelSelect();
