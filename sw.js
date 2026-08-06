@@ -1,7 +1,9 @@
-const CACHE_NAME = 'plo-io-v1';
+const CACHE_NAME = 'plo-io-v2';
 const ASSETS = [
   './',
   './index.html',
+  './style.css',
+  './game-engine.js',
   './manifest.json'
 ];
 
