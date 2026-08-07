@@ -58,6 +58,22 @@ canvas {
     z-index: 1;
 }
 
+#input-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 4;
+    cursor: pointer;
+    touch-action: none;
+    background: transparent;
+}
+
+#input-overlay.hidden {
+    display: none;
+}
+
 /* Screens Overlays */
 .screen {
     position: absolute;
@@ -1170,45 +1186,275 @@ canvas {
     100% { transform: rotate(0deg); }
 }
 
-/* Small screen media queries */
-@media (max-width: 768px) {
-    .title-logo {
-        font-size: 52px;
-    }
+/* HIGHLY OPTIMIZED MOBILE-FIRST RESPONSIVE BREAKPOINTS */
 
-    .subtitle {
-        font-size: 13px;
-        letter-spacing: 3px;
-    }
-
+/* 1. Mobile Portrait & general narrow viewports (Force Rotate overlay active or standard stack) */
+@media (max-width: 767px) and (orientation: portrait) {
     .cards-container {
         flex-direction: column;
         align-items: center;
-        gap: 16px;
+        gap: 12px;
     }
-
     .mode-card {
         width: 100%;
-        max-width: 380px;
-        padding: 20px 15px;
+        max-width: 340px;
+        padding: 16px 12px;
     }
-
-    .mode-icon {
-        font-size: 32px;
-        margin-bottom: 10px;
+    .title-logo {
+        font-size: 42px;
     }
-
-    .mode-title {
-        font-size: 20px;
-    }
-
-    .level-grid {
-        grid-template-columns: repeat(4, 1fr);
+    .subtitle {
+        font-size: 12px;
+        letter-spacing: 2px;
     }
 }
 
-@media (max-width: 480px) {
+/* 2. Compact Landscape viewports (Phones & small handheld devices rotated) */
+@media (max-height: 520px) {
+    .screen {
+        padding: 10px 16px;
+    }
+
+    /* Core title header branding adjustments */
+    .title-container {
+        margin: 4px 0;
+    }
+    .title-logo {
+        font-size: clamp(24px, 6vh, 36px);
+        letter-spacing: 3px;
+        animation: none; /* disable heavy movement animation */
+    }
+    .subtitle {
+        font-size: 9px;
+        letter-spacing: 2px;
+        margin-top: -2px;
+    }
+
+    /* Header mini widgets adjustments */
+    .menu-header-row {
+        gap: 8px;
+    }
+    .profile-card-mini {
+        padding: 4px 10px;
+        gap: 6px;
+    }
+    .profile-avatar {
+        width: 24px;
+        height: 24px;
+        font-size: 11px;
+    }
+    .profile-name-mini {
+        font-size: 11px;
+    }
+    .profile-rating-mini {
+        font-size: 10px;
+    }
+    .widget-item {
+        padding: 4px 10px;
+        font-size: 12px;
+    }
+
+    /* Cards horizontal layout (Nintendo Switch style grid) */
+    .cards-container {
+        flex-direction: row !important;
+        gap: 10px;
+        max-width: 95%;
+        margin: 5px auto;
+    }
+    .mode-card {
+        padding: 10px 12px;
+        min-height: 100px;
+    }
+    .mode-icon {
+        font-size: 20px;
+        margin-bottom: 2px;
+    }
+    .mode-title {
+        font-size: 15px;
+        margin-bottom: 2px;
+        letter-spacing: 1px;
+    }
+    .mode-desc {
+        display: none; /* Hide verbose descriptions to fit screen cleanly */
+    }
+    .best-score-tag {
+        margin-top: 4px;
+        font-size: 9px;
+        padding: 2px 6px;
+    }
+
+    /* Bottom toolbar button size refinements */
+    .menu-footer-row {
+        gap: 10px;
+    }
+    .toolbar-buttons {
+        gap: 8px;
+    }
+    .settings-btn {
+        padding: 8px 12px;
+        font-size: 12px;
+        min-height: 38px;
+    }
+    .social-links {
+        gap: 8px;
+    }
+    .social-btn {
+        width: 32px;
+        height: 32px;
+    }
+    .social-btn svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    /* Biome Level selection screen refinements */
+    .biomes-nav {
+        margin: 5px 0;
+        gap: 6px;
+    }
+    .biome-tab {
+        padding: 6px 8px;
+        font-size: 11px;
+        min-height: 36px;
+    }
     .level-grid {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(8, 1fr) !important; /* more columns on short wide screens */
+        gap: 8px;
+        height: 42vh;
+    }
+    .level-box {
+        border-radius: 8px;
+    }
+    .level-num {
+        font-size: 20px;
+    }
+    .level-percent {
+        font-size: 10px;
+        margin-top: 2px;
+    }
+    .level-box.locked .unlock-price-tag {
+        font-size: 9px;
+        padding: 1px 4px;
+        bottom: 3px;
+    }
+    .level-box .lock-icon {
+        width: 10px;
+        height: 10px;
+        top: 4px;
+        right: 4px;
+    }
+
+    /* Modal Layouts (Prevent overflow on landscape phones) */
+    .modal-content {
+        padding: 16px 20px;
+        border-radius: 16px;
+        max-height: 96vh;
+        overflow-y: auto;
+    }
+    .modal-title {
+        font-size: 24px;
+        margin-bottom: 8px;
+    }
+    .modal-subtitle {
+        font-size: 12px;
+        margin-bottom: 10px;
+    }
+    .modal-stats {
+        margin: 10px 0;
+        padding: 8px 14px;
+    }
+    .stat-line {
+        font-size: 12px;
+        margin-bottom: 4px;
+    }
+    .modal-buttons {
+        margin-top: 10px;
+        gap: 8px;
+    }
+    .modal-btn {
+        padding: 8px;
+        font-size: 13px;
+    }
+
+    /* Profile specific */
+    .profile-header-card {
+        padding: 10px;
+        margin-bottom: 12px;
+        gap: 12px;
+    }
+    .profile-avatar-large {
+        width: 44px;
+        height: 44px;
+        font-size: 20px;
+    }
+    .profile-username-input {
+        font-size: 15px;
+        width: 120px;
+    }
+
+    /* Skins Shop specific */
+    .skins-grid {
+        grid-template-columns: repeat(4, 1fr); /* 4 columns on landscape */
+        gap: 8px;
+        margin: 10px 0;
+    }
+    .skin-card {
+        padding: 8px;
+    }
+    .skin-preview-canvas-holder {
+        height: 36px;
+        margin-bottom: 4px;
+    }
+    .skin-name {
+        font-size: 12px;
+        margin-bottom: 2px;
+    }
+    .skin-status {
+        font-size: 10px;
+        padding: 2px 4px;
+    }
+
+    /* Daily reward popup */
+    .daily-rewards-container {
+        margin: 10px 0;
+        gap: 6px;
+    }
+    .reward-day-box {
+        padding: 6px 3px;
+    }
+    .reward-day-title {
+        font-size: 10px;
+    }
+    .reward-amount {
+        font-size: 11px;
+    }
+}
+
+/* Fallback generic width query for smaller desktop / tablet screens */
+@media (min-height: 521px) and (max-width: 1024px) {
+    .cards-container {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 16px;
+    }
+    .mode-card {
+        flex: none;
+        width: 45%;
+        padding: 24px 16px;
+    }
+    .level-grid {
+        grid-template-columns: repeat(5, 1fr) !important;
+    }
+}
+
+@media (min-height: 521px) and (max-width: 640px) {
+    .cards-container {
+        flex-direction: column;
+    }
+    .mode-card {
+        width: 100%;
+    }
+    .level-grid {
+        grid-template-columns: repeat(4, 1fr) !important;
     }
 }

@@ -19,6 +19,11 @@ let width = 1200;
 let height = 675;
 let scaleX = 1;
 let scaleY = 1;
+let scale = 1;
+let offsetX = 0;
+let offsetY = 0;
+let targetHorizontalOffset = 180;
+let currentHorizontalOffset = 180;
 
 // Timing
 let lastTime = 0;
@@ -29,7 +34,9 @@ const inputs = {
     active: false,
     space: false,
     w: false,
-    pointer: false
+    pointer: false,
+    left: false,
+    right: false
 };
 
 // Parallax background offsets
@@ -115,9 +122,32 @@ function initCanvas() {
     canvas.width = rect.width;
     canvas.height = rect.height;
 
-    // Calculate dynamic responsive scale factors
-    scaleX = canvas.width / width;
-    scaleY = canvas.height / height;
+    // Calculate dynamic responsive scale factors maintaining 16:9 aspect ratio
+    const targetAspect = width / height;
+    const currentAspect = rect.width / rect.height;
+
+    if (currentAspect > targetAspect) {
+        // Screen is wider than 16:9
+        scale = rect.height / height;
+        offsetX = (rect.width - width * scale) / 2;
+        offsetY = 0;
+    } else {
+        // Screen is taller than 16:9
+        scale = rect.width / width;
+        offsetX = 0;
+        offsetY = (rect.height - height * scale) / 2;
+    }
+
+    // Fallbacks for coordinate transformations
+    scaleX = scale;
+    scaleY = scale;
+}
+
+// Hybrid Mobile Client Detection Helper
+function isMobileDevice() {
+    const checkTouch = ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+    const checkUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    return checkTouch && (checkUA || window.innerWidth < 1024);
 }
 
 // Fullscreen API implementation on click / touch anywhere on the startscreen
@@ -205,6 +235,12 @@ function initInputListeners() {
         if (e.code === 'KeyW' || e.code === 'ArrowUp') {
             inputs.w = true;
         }
+        if (e.code === 'KeyA' || e.code === 'ArrowLeft') {
+            inputs.left = true;
+        }
+        if (e.code === 'KeyD' || e.code === 'ArrowRight') {
+            inputs.right = true;
+        }
         if (e.code === 'Escape') {
             if (currentGameState === STATE_PLAYING) {
                 pauseGame();
@@ -222,34 +258,63 @@ function initInputListeners() {
         if (e.code === 'KeyW' || e.code === 'ArrowUp') {
             inputs.w = false;
         }
+        if (e.code === 'KeyA' || e.code === 'ArrowLeft') {
+            inputs.left = false;
+        }
+        if (e.code === 'KeyD' || e.code === 'ArrowRight') {
+            inputs.right = false;
+        }
         updateInputActiveState();
     });
 
-    window.addEventListener('mousedown', (e) => {
-        if (e.button === 0) {
-            inputs.pointer = true;
-            updateInputActiveState();
-        }
-    });
+    // Custom touch overlay handler for unified steering + jump controls
+    const overlay = document.getElementById('input-overlay');
+    if (overlay) {
+        const handlePointerInput = (e) => {
+            let isPressed = false;
+            let goLeft = false;
+            let goRight = false;
 
-    window.addEventListener('mouseup', (e) => {
-        if (e.button === 0) {
-            inputs.pointer = false;
-            updateInputActiveState();
-        }
-    });
+            const rect = overlay.getBoundingClientRect();
+            const widthPixels = rect.width;
 
-    window.addEventListener('touchstart', (e) => {
-        if (e.target.closest('#game-container')) {
-            inputs.pointer = true;
-            updateInputActiveState();
-        }
-    });
+            if (e.touches && e.touches.length > 0) {
+                isPressed = true;
+                for (let i = 0; i < e.touches.length; i++) {
+                    const touch = e.touches[i];
+                    // clientX relative to the overlay rect
+                    const px = touch.clientX - rect.left;
+                    if (px < widthPixels * 0.3) {
+                        goLeft = true;
+                    } else if (px > widthPixels * 0.7) {
+                        goRight = true;
+                    }
+                }
+            } else if (!e.touches && (e.buttons & 1)) {
+                // Mouse left click held down
+                isPressed = true;
+                const px = e.clientX - rect.left;
+                if (px < widthPixels * 0.3) {
+                    goLeft = true;
+                } else if (px > widthPixels * 0.7) {
+                    goRight = true;
+                }
+            }
 
-    window.addEventListener('touchend', (_e) => {
-        inputs.pointer = false;
-        updateInputActiveState();
-    });
+            inputs.pointer = isPressed;
+            inputs.left = goLeft;
+            inputs.right = goRight;
+            updateInputActiveState();
+        };
+
+        const events = ['mousedown', 'mousemove', 'mouseup', 'mouseleave', 'touchstart', 'touchmove', 'touchend', 'touchcancel'];
+        events.forEach(evt => {
+            overlay.addEventListener(evt, (e) => {
+                e.preventDefault();
+                handlePointerInput(e);
+            }, { passive: false });
+        });
+    }
 }
 
 function updateInputActiveState() {
@@ -331,12 +396,16 @@ function setGameState(newState) {
         document.getElementById(screens[newState]).classList.remove('hidden');
     }
 
+    const overlay = document.getElementById('input-overlay');
+
     if (newState === STATE_PLAYING) {
         document.getElementById('hud').classList.add('active');
+        if (overlay) overlay.classList.remove('hidden');
         // Start Synthesizer soundtracks
         startSynthMusic();
     } else {
         stopSynthMusic();
+        if (overlay) overlay.classList.add('hidden');
     }
 }
 
@@ -354,6 +423,8 @@ function openLevelSelect() {
 
 // --- GAMEPLAY INITIALIZATION & PROCEDURAL GENERATORS ---
 function initGameElements() {
+    targetHorizontalOffset = 180;
+    currentHorizontalOffset = 180;
     // 2. Initialize Player Parameters
     player.x = 150;
     player.y = 337.5;
@@ -673,7 +744,8 @@ function generateEndlessThemeBuffer(startX, length, biome) {
 // --- WEATHER & AMBIENT DECORATIONS DECORATORS ---
 function initAmbientDecorations() {
     biomeAmbientParticles = [];
-    const count = 35;
+    // Scale down ambient particle density on mobile to preserve battery life and graphics throughput
+    const count = isMobileDevice() ? 12 : 35;
     const biome = getBiomeForLevel(currentLevel);
 
     for (let i = 0; i < count; i++) {
@@ -806,6 +878,15 @@ function updatePlayerPhysics(dt) {
     // 1. Horizontal Progression
     player.x += player.baseSpeed * player.speedMultiplier * dt;
 
+    // 1.5 Unified steering: update target horizontal offset based on active inputs
+    if (inputs.left) {
+        targetHorizontalOffset = 100;
+    } else if (inputs.right) {
+        targetHorizontalOffset = 380;
+    } else {
+        targetHorizontalOffset = 180;
+    }
+
     // 2. Direct Diagonal Controls
     if (inputs.active) {
         player.targetVy = floatSpeed;
@@ -847,9 +928,10 @@ function updatePlayerPhysics(dt) {
         time: Date.now()
     });
 
-    // Trail cleanup
+    // Trail cleanup (limit trail lifetime / length on mobile to save rendering throughput)
     const now = Date.now();
-    player.trail = player.trail.filter(pt => now - pt.time < 900);
+    const trailLifetime = isMobileDevice() ? 450 : 900;
+    player.trail = player.trail.filter(pt => now - pt.time < trailLifetime);
 
     // Generate drift micro-sparks from engines
     if (Math.random() < 0.45) {
@@ -897,9 +979,9 @@ function triggerCrashExplosion() {
     // Deduct rating penalty on UI thread and update local storage balance
     updateStatsOnCrash();
 
-    // Splash burst of skin-themed neon bits
+    // Splash burst of skin-themed neon bits (reduced count on mobile)
     const skin = getActiveSkinDetails();
-    const burstCount = 45;
+    const burstCount = isMobileDevice() ? 18 : 45;
     for (let i = 0; i < burstCount; i++) {
         const angle = Math.random() * Math.PI * 2;
         const spd = Math.random() * 260 + 80;
@@ -1069,7 +1151,9 @@ function drawPlayerParticles(ctx) {
 
 // Camera dynamics tracking
 function updateCamera(dt) {
-    camera.x = player.x - 180;
+    // Smoothly interpolate current horizontal offset to avoid camera jerks
+    currentHorizontalOffset += (targetHorizontalOffset - currentHorizontalOffset) * 6 * dt;
+    camera.x = player.x - currentHorizontalOffset;
 
     camera.targetY = player.y - height / 2;
     // Bounds limit checking
@@ -1946,10 +2030,7 @@ function update(dt) {
 function render() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    ctx.save();
-    ctx.scale(scaleX, scaleY);
-
-    // Draw background grid
+    // 1. Draw background grid across full canvas (unscaled & untranslated)
     if (hexPatternCanvas) {
         ctx.save();
         const left = -(bgScrollX * 0.3) % hexPatternWidth;
@@ -1957,9 +2038,21 @@ function render() {
 
         ctx.fillStyle = ctx.createPattern(hexPatternCanvas, 'repeat');
         ctx.translate(left, top);
-        ctx.fillRect(-left, -top, width, height);
+        // Cover entire canvas width and height
+        ctx.fillRect(-left, -top, canvas.width, canvas.height);
         ctx.restore();
     }
+
+    // 2. Center and scale the 1200x675 gameplay arena
+    ctx.save();
+    ctx.translate(offsetX, offsetY);
+    ctx.scale(scale, scale);
+
+    // Clip gameplay within 1200x675 boundary to ensure clean aspect ratio borders
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, 0, width, height);
+    ctx.clip();
 
     // Biome Specific Overlay Shading Effects
     drawBiomeWeatherGlow(ctx);
@@ -2013,7 +2106,9 @@ function render() {
 
     ctx.restore();
 
-    ctx.restore();
+    ctx.restore(); // Restore clip
+
+    ctx.restore(); // Restore scale & translate
 }
 
 function drawBiomeWeatherGlow(ctx) {
