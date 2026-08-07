@@ -77,16 +77,19 @@ canvas {
 /* Screens Overlays */
 .screen {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100vw;
+    height: 100vh;
+    max-width: 177.78vh; /* Enforce 16:9 aspect ratio width constraint */
+    max-height: 56.25vw; /* Enforce 16:9 aspect ratio height constraint */
     z-index: 10;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     align-items: center;
-    padding: 30px 24px;
+    padding: clamp(10px, 3vh, 30px) clamp(10px, 3vw, 24px);
     background: radial-gradient(circle at center, rgba(3, 14, 12, 0.8) 0%, rgba(1, 4, 4, 0.98) 100%);
     transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1), transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
     backdrop-filter: blur(8px);
@@ -95,7 +98,7 @@ canvas {
 .screen.hidden {
     opacity: 0;
     pointer-events: none;
-    transform: scale(1.03);
+    transform: translate(-50%, -50%) scale(1.03);
 }
 
 /* Glassmorphism utility */
@@ -1308,18 +1311,18 @@ canvas {
     .cards-container {
         flex-direction: column;
         align-items: center;
-        gap: 12px;
+        gap: 8px;
     }
     .mode-card {
         width: 100%;
         max-width: 340px;
-        padding: 16px 12px;
+        padding: 12px 10px;
     }
     .title-logo {
-        font-size: 42px;
+        font-size: clamp(32px, 8vw, 42px);
     }
     .subtitle {
-        font-size: 12px;
+        font-size: 11px;
         letter-spacing: 2px;
     }
 }
@@ -1327,221 +1330,248 @@ canvas {
 /* 2. Compact Landscape viewports (Phones & small handheld devices rotated) */
 @media (max-height: 520px) {
     .screen {
-        padding: 10px 16px;
+        padding: clamp(6px, 1.5vh, 12px) clamp(10px, 2vw, 20px);
     }
 
     /* Core title header branding adjustments */
     .title-container {
-        margin: 4px 0;
+        margin: 2px 0;
     }
     .title-logo {
-        font-size: clamp(24px, 6vh, 36px);
-        letter-spacing: 3px;
+        font-size: clamp(20px, 12vh, 32px);
+        letter-spacing: 2px;
         animation: none; /* disable heavy movement animation */
     }
     .subtitle {
-        font-size: 9px;
-        letter-spacing: 2px;
-        margin-top: -2px;
+        font-size: 8px;
+        letter-spacing: 1px;
+        margin-top: -1px;
     }
 
     /* Header mini widgets adjustments */
     .menu-header-row {
-        gap: 8px;
+        gap: 4px;
     }
     .profile-card-mini {
-        padding: 4px 10px;
-        gap: 6px;
+        padding: 2px 6px;
+        gap: 4px;
+        border-radius: 8px;
     }
     .profile-avatar {
-        width: 24px;
-        height: 24px;
-        font-size: 11px;
-    }
-    .profile-name-mini {
-        font-size: 11px;
-    }
-    .profile-rating-mini {
+        width: 20px;
+        height: 20px;
         font-size: 10px;
     }
+    .profile-name-mini {
+        font-size: 10px;
+    }
+    .profile-rating-mini {
+        font-size: 8px;
+    }
     .widget-item {
-        padding: 4px 10px;
-        font-size: 12px;
+        padding: 2px 6px;
+        font-size: 10px;
+        border-radius: 8px;
     }
 
     /* Cards horizontal layout (Nintendo Switch style grid) */
     .cards-container {
         flex-direction: row !important;
-        gap: 10px;
-        max-width: 95%;
-        margin: 5px auto;
+        gap: 8px;
+        max-width: 100%;
+        margin: 2px auto;
+        padding: 2px;
     }
     .mode-card {
-        padding: 10px 12px;
-        min-height: 100px;
+        padding: 6px 8px;
+        min-height: 80px;
+        border-radius: 10px;
     }
     .mode-icon {
-        font-size: 20px;
-        margin-bottom: 2px;
+        font-size: 16px;
+        margin-bottom: 1px;
     }
     .mode-title {
-        font-size: 15px;
-        margin-bottom: 2px;
-        letter-spacing: 1px;
+        font-size: 13px;
+        margin-bottom: 1px;
+        letter-spacing: 0.5px;
     }
     .mode-desc {
         display: none; /* Hide verbose descriptions to fit screen cleanly */
     }
     .best-score-tag {
-        margin-top: 4px;
-        font-size: 9px;
-        padding: 2px 6px;
+        margin-top: 2px;
+        font-size: 8px;
+        padding: 1px 4px;
     }
 
     /* Bottom toolbar button size refinements */
     .menu-footer-row {
-        gap: 10px;
+        gap: 6px;
     }
     .toolbar-buttons {
-        gap: 8px;
+        gap: 6px;
     }
     .settings-btn {
-        padding: 8px 12px;
-        font-size: 12px;
-        min-height: 38px;
+        padding: 4px 8px;
+        font-size: 11px;
+        min-height: 28px;
+        border-radius: 6px;
     }
     .social-links {
-        gap: 8px;
+        gap: 4px;
     }
     .social-btn {
-        width: 32px;
-        height: 32px;
+        width: 26px;
+        height: 26px;
     }
     .social-btn svg {
-        width: 14px;
-        height: 14px;
+        width: 12px;
+        height: 12px;
     }
 
     /* Biome Level selection screen refinements */
     .biomes-nav {
-        margin: 5px 0;
-        gap: 6px;
+        margin: 3px 0;
+        gap: 4px;
     }
     .biome-tab {
-        padding: 6px 8px;
-        font-size: 11px;
-        min-height: 36px;
+        padding: 4px 6px;
+        font-size: 10px;
+        min-height: 28px;
+        border-radius: 6px;
     }
     .level-grid {
-        grid-template-columns: repeat(8, 1fr) !important; /* more columns on short wide screens */
-        gap: 8px;
-        height: 42vh;
+        grid-template-columns: repeat(10, 1fr) !important; /* more columns on short wide screens */
+        gap: 6px;
+        height: 48vh;
+        padding: 4px;
     }
     .level-box {
-        border-radius: 8px;
+        border-radius: 6px;
+        border-width: 1.5px;
     }
     .level-num {
-        font-size: 20px;
+        font-size: 16px;
     }
     .level-percent {
-        font-size: 10px;
-        margin-top: 2px;
+        font-size: 8px;
+        margin-top: 1px;
     }
     .level-box.locked .unlock-price-tag {
-        font-size: 9px;
-        padding: 1px 4px;
-        bottom: 3px;
+        font-size: 8px;
+        padding: 1px 3px;
+        bottom: 2px;
     }
     .level-box .lock-icon {
-        width: 10px;
-        height: 10px;
-        top: 4px;
-        right: 4px;
+        width: 8px;
+        height: 8px;
+        top: 3px;
+        right: 3px;
     }
 
     /* Modal Layouts (Prevent overflow on landscape phones) */
     .modal-content {
-        padding: 16px 20px;
-        border-radius: 16px;
-        max-height: 96vh;
+        padding: 12px 16px;
+        border-radius: 12px;
+        max-height: 98vh;
         overflow-y: auto;
     }
     .modal-title {
-        font-size: 24px;
-        margin-bottom: 8px;
-    }
-    .modal-subtitle {
-        font-size: 12px;
-        margin-bottom: 10px;
-    }
-    .modal-stats {
-        margin: 10px 0;
-        padding: 8px 14px;
-    }
-    .stat-line {
-        font-size: 12px;
+        font-size: 20px;
         margin-bottom: 4px;
     }
+    .modal-subtitle {
+        font-size: 11px;
+        margin-bottom: 6px;
+    }
+    .modal-stats {
+        margin: 6px 0;
+        padding: 6px 10px;
+    }
+    .stat-line {
+        font-size: 11px;
+        margin-bottom: 3px;
+    }
     .modal-buttons {
-        margin-top: 10px;
-        gap: 8px;
+        margin-top: 6px;
+        gap: 6px;
     }
     .modal-btn {
-        padding: 8px;
-        font-size: 13px;
+        padding: 6px;
+        font-size: 11px;
     }
 
     /* Profile specific */
     .profile-header-card {
-        padding: 10px;
-        margin-bottom: 12px;
-        gap: 12px;
+        padding: 8px;
+        margin-bottom: 8px;
+        gap: 8px;
+        border-radius: 8px;
     }
     .profile-avatar-large {
-        width: 44px;
-        height: 44px;
-        font-size: 20px;
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
     }
     .profile-username-input {
-        font-size: 15px;
-        width: 120px;
+        font-size: 13px;
+        width: 90px;
+    }
+    .dev-branding-card {
+        margin: 6px 0;
+        padding: 8px;
+        border-radius: 8px;
+    }
+    .dev-title {
+        font-size: 11px;
+    }
+    .dev-subtitle {
+        font-size: 9px;
+        margin-bottom: 6px;
+    }
+    .dev-social-link {
+        font-size: 9px;
+        padding: 3px 6px;
     }
 
     /* Skins Shop specific */
     .skins-grid {
         grid-template-columns: repeat(4, 1fr); /* 4 columns on landscape */
-        gap: 8px;
-        margin: 10px 0;
+        gap: 6px;
+        margin: 6px 0;
     }
     .skin-card {
-        padding: 8px;
+        padding: 6px;
+        border-radius: 8px;
     }
     .skin-preview-canvas-holder {
-        height: 36px;
-        margin-bottom: 4px;
-    }
-    .skin-name {
-        font-size: 12px;
+        height: 28px;
         margin-bottom: 2px;
     }
-    .skin-status {
+    .skin-name {
         font-size: 10px;
-        padding: 2px 4px;
+        margin-bottom: 1px;
+    }
+    .skin-status {
+        font-size: 8px;
+        padding: 1px 3px;
     }
 
     /* Daily reward popup */
     .daily-rewards-container {
-        margin: 10px 0;
-        gap: 6px;
+        margin: 6px 0;
+        gap: 4px;
     }
     .reward-day-box {
-        padding: 6px 3px;
+        padding: 4px 2px;
+        border-radius: 4px;
     }
     .reward-day-title {
-        font-size: 10px;
+        font-size: 8px;
     }
     .reward-amount {
-        font-size: 11px;
+        font-size: 9px;
     }
 }
 
