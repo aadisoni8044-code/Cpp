@@ -502,3 +502,69 @@ function playBuySound() {
         playCheckpointSound();
     }
 }
+
+// --- PWA & FULLSCREEN API ARCHITECTURE ---
+let deferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent the mini-infobar from appearing on mobile
+    e.preventDefault();
+    // Stash the event so it can be triggered later
+    deferredPrompt = e;
+    // Show the install button in the toolbar
+    const installBtn = document.getElementById('pwa-install-btn');
+    if (installBtn) {
+        installBtn.style.display = 'inline-flex';
+    }
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    const installBtn = document.getElementById('pwa-install-btn');
+    if (installBtn) {
+        installBtn.addEventListener('click', async () => {
+            if (!deferredPrompt) return;
+            // Show the install prompt
+            deferredPrompt.prompt();
+            // Wait for the user to respond to the prompt
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`User response to install prompt: ${outcome}`);
+            // We've used the prompt, and can't use it again, discard it
+            deferredPrompt = null;
+            // Hide the install button
+            installBtn.style.display = 'none';
+        });
+    }
+});
+
+function toggleFullscreen() {
+    const btn = document.getElementById('fullscreen-toggle-btn');
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen()
+            .then(() => {
+                if (btn) btn.innerHTML = '<span>⛶</span> EXIT FULLSCREEN';
+            })
+            .catch((err) => {
+                console.error(`Error attempting to enable fullscreen: ${err.message}`);
+            });
+    } else {
+        document.exitFullscreen()
+            .then(() => {
+                if (btn) btn.innerHTML = '<span>⛶</span> FULLSCREEN';
+            })
+            .catch((err) => {
+                console.error(`Error attempting to exit fullscreen: ${err.message}`);
+            });
+    }
+}
+
+// Ensure the button icon stays in sync if exit is triggered by Esc/native gestures
+document.addEventListener('fullscreenchange', () => {
+    const btn = document.getElementById('fullscreen-toggle-btn');
+    if (btn) {
+        if (document.fullscreenElement) {
+            btn.innerHTML = '<span>⛶</span> EXIT FULLSCREEN';
+        } else {
+            btn.innerHTML = '<span>⛶</span> FULLSCREEN';
+        }
+    }
+});

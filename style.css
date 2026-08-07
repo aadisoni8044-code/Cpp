@@ -360,7 +360,7 @@ canvas {
     font-size: 14px;
     font-weight: 700;
     cursor: pointer;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 10px;
     transition: all 0.2s ease;
@@ -371,6 +371,18 @@ canvas {
     background: rgba(0, 255, 102, 0.15);
     box-shadow: 0 0 12px rgba(0, 255, 102, 0.25);
     transform: translateY(-2px);
+}
+
+#pwa-install-btn:hover {
+    border-color: var(--neon-gold) !important;
+    background: rgba(255, 170, 0, 0.15) !important;
+    box-shadow: 0 0 12px rgba(255, 170, 0, 0.4) !important;
+}
+
+#fullscreen-toggle-btn:hover {
+    border-color: var(--neon-cyan) !important;
+    background: rgba(0, 243, 255, 0.15) !important;
+    box-shadow: 0 0 12px rgba(0, 243, 255, 0.4) !important;
 }
 
 .social-links {
