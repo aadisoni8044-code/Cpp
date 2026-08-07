@@ -1,0 +1,437 @@
+:root {
+  --neon-green: #00ff66;
+  --neon-cyan: #00f3ff;
+  --neon-dark: #051412;
+  --neon-glow: 0 0 10px rgba(0, 255, 102, 0.6), 0 0 20px rgba(0, 255, 102, 0.4);
+  --cyan-glow: 0 0 10px rgba(0, 243, 255, 0.6), 0 0 20px rgba(0, 243, 255, 0.4);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+body, html {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--neon-dark);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #fff;
+}
+
+/* Core Single Page Container */
+#game-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Game Canvas */
+canvas {
+  position: absolute;
+  display: block;
+  z-index: 1;
+  touch-action: none;
+}
+
+/* Rotate Device Overlay */
+#rotate-device-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(circle, rgba(10,35,30,0.98) 0%, rgba(5,20,18,1) 100%);
+  z-index: 9999;
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  color: #fff;
+  padding: 20px;
+}
+
+.rotate-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  max-width: 320px;
+}
+
+.phone-icon-wrapper {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  margin-bottom: 10px;
+}
+
+.phone-icon {
+  width: 48px;
+  height: 48px;
+  fill: var(--neon-green);
+  filter: drop-shadow(0 0 10px rgba(0, 255, 102, 0.6));
+  animation: rotatePhone 2.5s ease-in-out infinite;
+}
+
+.rotate-arrow {
+  position: absolute;
+  top: 10px;
+  right: 5px;
+  width: 32px;
+  height: 32px;
+  fill: var(--neon-cyan);
+  filter: drop-shadow(0 0 8px rgba(0, 243, 255, 0.6));
+  animation: rotateArrow 2.5s ease-in-out infinite;
+}
+
+#rotate-device-overlay h2 {
+  font-size: 24px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #fff;
+  text-shadow: var(--neon-glow);
+}
+
+#rotate-device-overlay p {
+  font-size: 14px;
+  color: #8faeab;
+  line-height: 1.5;
+}
+
+@keyframes rotatePhone {
+  0%, 100% { transform: rotate(0deg); }
+  40%, 60% { transform: rotate(90deg); }
+}
+
+@keyframes rotateArrow {
+  0%, 100% { opacity: 0.3; transform: scale(0.9); }
+  40%, 60% { opacity: 1; transform: scale(1.1) rotate(45deg); }
+}
+
+@media (max-width: 900px) and (orientation: portrait) {
+  #rotate-device-overlay {
+    display: flex;
+  }
+}
+
+/* Keyframe Animations */
+@keyframes titleFloat {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-8px); }
+}
+
+/* Coin Display in Menus and HUD */
+.coin-display-wrapper {
+  position: absolute;
+  top: 30px;
+  right: 150px;
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 8px;
+  background: rgba(10, 35, 32, 0.7);
+  border: 2px solid #ffd700;
+  color: #ffd700;
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 50;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.coin-display-wrapper:hover {
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+  transform: scale(1.02);
+}
+
+.hud-coin-display {
+  font-size: 14px;
+  font-weight: 800;
+  color: #ffd700;
+  background: rgba(255, 215, 0, 0.1);
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  text-shadow: 0 0 4px rgba(255, 215, 0, 0.4);
+}
+
+/* Coins Gained Animation */
+@keyframes coinFloatUp {
+  0% { transform: translate(-50%, 0) scale(0.8); opacity: 0; }
+  20% { opacity: 1; transform: translate(-50%, -20px) scale(1.1); }
+  100% { transform: translate(-50%, -80px) scale(1); opacity: 0; }
+}
+
+.coin-float-text {
+  position: absolute;
+  font-weight: 900;
+  font-size: 18px;
+  color: #ffd700;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.8), 0 2px 4px rgba(0,0,0,0.8);
+  pointer-events: none;
+  z-index: 999;
+  animation: coinFloatUp 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+/* HUD overlay during gameplay */
+#hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 5;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 15px 25px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+#hud.active {
+  opacity: 1;
+}
+
+.hud-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.hud-btn {
+  pointer-events: auto;
+  background: rgba(10, 35, 32, 0.7);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.hud-btn:hover {
+  border-color: var(--neon-green);
+  box-shadow: 0 0 10px rgba(0, 255, 102, 0.3);
+}
+
+.pause-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  font-size: 20px;
+}
+
+.hud-center-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  flex-grow: 1;
+  max-width: 40%;
+}
+
+.progress-container {
+  width: 100%;
+  height: 20px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--neon-green), var(--neon-cyan));
+  transition: width 0.1s linear;
+}
+
+.progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 11px;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+}
+
+.hud-level-indicator {
+  font-size: 12px;
+  font-weight: 700;
+  color: #9cb8b5;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.hud-practice-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: auto;
+  align-self: flex-start;
+  margin-bottom: 10px;
+}
+
+.practice-action-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.practice-action-btn.place {
+  background: rgba(0, 243, 255, 0.2);
+  border-color: var(--neon-cyan);
+}
+.practice-action-btn.place:hover {
+  background: rgba(0, 243, 255, 0.35);
+  box-shadow: 0 0 8px rgba(0, 243, 255, 0.4);
+}
+
+.practice-action-btn.clear {
+  background: rgba(255, 0, 102, 0.2);
+  border-color: #ff0066;
+}
+.practice-action-btn.clear:hover {
+  background: rgba(255, 0, 102, 0.35);
+  box-shadow: 0 0 8px rgba(255, 0, 102, 0.4);
+}
+
+.hud-leaderboard {
+  background: rgba(5, 20, 18, 0.85);
+  border: 1.5px solid rgba(0, 243, 255, 0.3);
+  border-radius: 8px;
+  padding: 10px;
+  width: 160px;
+  align-self: flex-end;
+  pointer-events: auto;
+  display: none;
+}
+
+.hud-leaderboard.active {
+  display: block;
+}
+
+.leaderboard-title {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--neon-cyan);
+  margin-bottom: 5px;
+  font-weight: 700;
+  border-bottom: 1px solid rgba(0, 243, 255, 0.2);
+  padding-bottom: 3px;
+}
+
+.leaderboard-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  padding: 3px 0;
+  font-weight: 600;
+}
+
+.leaderboard-row.player {
+  color: var(--neon-green);
+}
+
+.practice-toggle-box {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 15px;
+}
+
+.practice-toggle-box input[type="checkbox"] {
+  display: none;
+}
+
+.practice-checkbox-custom {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--neon-cyan);
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
+  background: rgba(0, 243, 255, 0.05);
+}
+
+.practice-toggle-box input[type="checkbox"]:checked + .practice-checkbox-custom::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 6px;
+  width: 5px;
+  height: 10px;
+  border: solid var(--neon-cyan);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.practice-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--neon-cyan);
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.hud-player-name {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--neon-cyan);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: var(--cyan-glow);
+  background: rgba(0, 243, 255, 0.1);
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 243, 255, 0.2);
+}
+
+@media (max-height: 500px) {
+  #hud { padding: 5px 15px; }
+  .hud-player-name { font-size: 10px; padding: 2px 6px; }
+  .pause-btn { width: 32px; height: 32px; font-size: 14px; }
+  .hud-level-indicator { font-size: 10px; letter-spacing: 1px; }
+  .progress-container { height: 12px; }
+  .progress-text { font-size: 9px; }
+  .practice-label { font-size: 9px; }
+  .practice-checkbox-custom { width: 16px; height: 16px; }
+  .practice-toggle-box input[type="checkbox"]:checked + .practice-checkbox-custom::after {
+    top: 1px; left: 4px; width: 4px; height: 7px;
+  }
+  .hud-practice-controls { gap: 4px; margin-bottom: 5px; }
+  .practice-action-btn { padding: 4px 8px; font-size: 9px; }
+  .hud-center-info { max-width: 30%; }
+}

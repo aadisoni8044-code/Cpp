@@ -1,8 +1,11 @@
-const CACHE_NAME = 'plo-io-v2';
+const CACHE_NAME = 'plo-io-v3';
 const ASSETS = [
   './',
   './index.html',
-  './style.css',
+  './game-style.css',
+  './ui-style.css',
+  './modals.html',
+  './ui.js',
   './game-engine.js',
   './manifest.json'
 ];
@@ -43,10 +46,8 @@ self.addEventListener('fetch', (e) => {
         return cachedResponse;
       }
       return fetch(e.request).then((fetchResponse) => {
-        // Return resource from network if not cached
         return fetchResponse;
       }).catch(() => {
-        // Return cached index.html if user is completely offline and network fails
         if (e.request.mode === 'navigate') {
           return caches.match('./index.html');
         }

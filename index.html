@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>plo.io - Geometry Wave Runner</title>
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="game-style.css">
+  <link rel="stylesheet" href="ui-style.css">
 </head>
 <body>
 
@@ -35,7 +36,7 @@
 
       <!-- Coin Balance Indicator -->
       <div id="menu-coin-display" class="coin-display-wrapper">
-        <span style="font-size: 18px;">🪙</span>
+        <span>🪙</span>
         <span id="menu-coin-val">0</span>
       </div>
 
@@ -47,15 +48,17 @@
         <div class="subtitle">Geometry Wave Runner</div>
       </div>
 
+      <!-- Live-Action Menu Control buttons row -->
+      <div class="menu-top-row" style="z-index: 20; display: flex; gap: 15px; margin-bottom: 5px;">
+        <button class="menu-action-btn gold-btn" onclick="openDailyReward()"><span class="btn-icon">🎁</span> Daily Spin</button>
+        <button class="menu-action-btn green-btn" onclick="openAchievements()"><span class="btn-icon">🏆</span> Badges</button>
+        <button class="shop-btn" onclick="openShop()"><span class="btn-icon">🛍️</span> Shop / Skins</button>
+      </div>
+
       <!-- Player Name Input Container -->
       <div class="name-input-container">
         <label for="player-name-field" class="name-input-label">Enter Nickname</label>
         <input type="text" id="player-name-field" class="name-input-field" placeholder="NEON_WAVE" maxlength="15" value="NEON_WAVE">
-      </div>
-
-      <!-- Action Shop Button -->
-      <div style="display: flex; gap: 15px; margin-bottom: 5px; z-index: 20;">
-        <button class="shop-btn" onclick="openShop()">🛍️ Shop / Skins</button>
       </div>
 
       <div class="cards-container">
@@ -104,192 +107,15 @@
             <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
           </a>
           <a href="https://www.chess.com/member/aadisoni-c" target="_blank" rel="noopener noreferrer" class="social-btn" title="Chess.com">
-            <!-- Chess style representation using customized knight outline SVG -->
             <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-4 6h-2v2h2v2h-2v2h2v2h-2v-2H9v-2h2v-2H9V9h2V7h2v2h2V9zm-4-2H9v2h2V7zm0 8H9v2h2v-2zM5 19V5h14v14H5z"/></svg>
           </a>
         </div>
       </footer>
     </div>
 
-    <!-- Level Selection Screen Overlay -->
-    <div id="level-select-screen" class="screen hidden">
-      <button class="back-btn" onclick="openMainMenu()">← Menu</button>
-
-      <div class="title-container">
-        <h2 class="title-logo" style="font-size: 44px;">Level Select</h2>
-        <div class="subtitle">Classic Mode Courses</div>
-      </div>
-
-      <div id="level-grid" class="level-grid">
-        <!-- Generically populated by JS to load states -->
-      </div>
-
-      <div></div> <!-- Spacer -->
-    </div>
-
-    <!-- HUD Overlay during Gameplay -->
-    <div id="hud">
-      <div class="hud-top">
-        <button class="hud-btn pause-btn" onclick="pauseGame()">⏸</button>
-
-        <div id="hud-player-name" class="hud-player-name">NEON_WAVE</div>
-
-        <div class="hud-center-info">
-          <div id="hud-level-text" class="hud-level-indicator">Level 1</div>
-          <div class="progress-container">
-            <div id="hud-progress-bar" class="progress-bar"></div>
-            <div id="hud-progress-text" class="progress-text">0%</div>
-          </div>
-        </div>
-
-        <div class="hud-coin-display">
-          <span>🪙</span>
-          <span id="hud-coin-val">0</span>
-        </div>
-
-        <div class="practice-toggle-box">
-          <input type="checkbox" id="practice-mode-chk" onchange="togglePracticeMode(this.checked)">
-          <label for="practice-mode-chk" class="practice-checkbox-custom"></label>
-          <label for="practice-mode-chk" class="practice-label">Practice</label>
-        </div>
-
-        <button class="hud-btn pause-btn" onclick="toggleFullscreen()" style="margin-left: 10px;" title="Toggle Fullscreen">⛶</button>
-      </div>
-
-      <div class="hud-top" style="justify-content: space-between; align-items: flex-end; width: 100%;">
-        <!-- Practice check-pointing controls -->
-        <div id="practice-controls" class="hud-practice-controls" style="visibility: hidden;">
-          <button class="hud-btn practice-action-btn place" onclick="placeCheckpoint()">
-            🟢 Place Checkpoint
-          </button>
-          <button class="hud-btn practice-action-btn clear" onclick="clearCheckpoints()">
-            🔴 Clear All
-          </button>
-        </div>
-
-        <!-- Real-time bot leaderboard for Race Mode -->
-        <div id="race-leaderboard" class="hud-leaderboard">
-          <div class="leaderboard-title">Race Positions</div>
-          <div id="leaderboard-list">
-            <!-- Dynamically populated -->
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Pause Modal -->
-    <div id="pause-modal" class="modal-overlay">
-      <div class="modal-content">
-        <h2 class="modal-title">Paused</h2>
-        <div class="modal-stats">
-          <div class="stat-line">
-            <span>Player</span>
-            <span id="pause-player-val" class="val">NEON_WAVE</span>
-          </div>
-          <div class="stat-line">
-            <span>Current Progress</span>
-            <span id="pause-progress-val" class="val">0%</span>
-          </div>
-          <div class="stat-line">
-            <span>Game Mode</span>
-            <span id="pause-mode-val" class="val">Classic</span>
-          </div>
-        </div>
-        <div class="modal-buttons">
-          <button class="modal-btn primary" onclick="resumeGame()">Resume</button>
-          <button class="modal-btn secondary" onclick="restartLevel()">Restart</button>
-          <button class="modal-btn secondary" onclick="quitToMenu()">Quit to Menu</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Game Over Modal -->
-    <div id="gameover-modal" class="modal-overlay">
-      <div class="modal-content" style="border-color: #ff0066; box-shadow: 0 10px 30px rgba(255, 0, 102, 0.2);">
-        <h2 class="modal-title fail">Crashed</h2>
-        <div class="modal-stats">
-          <div class="stat-line">
-            <span>Player</span>
-            <span id="fail-player-val" class="val">NEON_WAVE</span>
-          </div>
-          <div class="stat-line">
-            <span>Final Progress</span>
-            <span id="fail-progress-val" class="val">0%</span>
-          </div>
-          <div class="stat-line">
-            <span>Score Achieved</span>
-            <span id="fail-score-val" class="val">0m</span>
-          </div>
-        </div>
-        <div class="modal-buttons">
-          <button class="modal-btn primary" style="background: #ff0066;" onclick="restartLevel()">Retry</button>
-          <button class="modal-btn secondary" onclick="quitToMenu()">Main Menu</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Level Complete / Victory Modal -->
-    <div id="win-modal" class="modal-overlay">
-      <div class="modal-content" style="border-color: var(--neon-cyan); box-shadow: 0 10px 30px rgba(0, 243, 255, 0.2);">
-        <h2 class="modal-title win">Cleared!</h2>
-        <div class="modal-stats">
-          <div class="stat-line">
-            <span>Player</span>
-            <span id="win-player-val" class="val">NEON_WAVE</span>
-          </div>
-          <div class="stat-line">
-            <span>Completed Mode</span>
-            <span id="win-mode-val" class="val">Level 1</span>
-          </div>
-          <div class="stat-line">
-            <span>Attempt Count</span>
-            <span id="win-attempts-val" class="val">1</span>
-          </div>
-        </div>
-        <div class="modal-buttons">
-          <button id="win-next-btn" class="modal-btn primary" style="background: var(--neon-cyan);" onclick="nextLevel()">Next Level</button>
-          <button class="modal-btn secondary" onclick="quitToMenu()">Main Menu</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Shop Modal -->
-    <div id="shop-modal" class="modal-overlay">
-      <div class="shop-modal-content">
-        <h2 class="modal-title" style="color: var(--neon-cyan); text-shadow: var(--cyan-glow); font-size: 28px;">🛍️ GEOMETRY SHOP</h2>
-
-        <!-- Shop Tabs -->
-        <div class="shop-tabs">
-          <button id="tab-btn-skins" class="shop-tab-btn active" onclick="switchShopTab('skins')">Skins</button>
-          <button id="tab-btn-levels" class="shop-tab-btn" onclick="switchShopTab('levels')">Levels</button>
-        </div>
-
-        <!-- Skins Tab Content -->
-        <div id="shop-tab-skins" class="shop-tab-content active">
-          <div id="shop-skins-list" class="skin-grid">
-            <!-- Dynamically populated from JS -->
-          </div>
-        </div>
-
-        <!-- Levels Tab Content -->
-        <div id="shop-tab-levels" class="shop-tab-content">
-          <div style="padding: 15px; background: rgba(255,255,255,0.05); border-radius: 12px; margin-bottom: 15px; text-align: left;">
-            <h3 style="color: #ffd700; font-size: 16px; margin-bottom: 5px; text-transform: uppercase;">Classic Level Store</h3>
-            <p style="font-size: 12px; color: #8faeab; line-height: 1.4;">
-              Levels 1-5 are unlocked by default. Higher tier levels (6-50) can be unlocked individually in the Classic Level Select grid for <strong style="color: #ffd700;">100 PLO Coins</strong> each. Alternatively, you can unlock all remaining locked levels instantly below!
-            </p>
-          </div>
-          <button id="shop-buy-all-btn" class="shop-buy-all-btn" onclick="buyAllLevels()">
-            Unlock All Levels
-          </button>
-        </div>
-
-        <button class="modal-btn secondary" style="width: auto; align-self: center; padding: 8px 30px;" onclick="closeShop()">Close</button>
-      </div>
-    </div>
-
   </div>
 
+  <script src="ui.js"></script>
   <script src="game-engine.js"></script>
 </body>
 </html>
