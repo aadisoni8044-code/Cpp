@@ -256,6 +256,28 @@
             <div class="modal-content profile-modal-content" style="border-color: var(--neon-cyan); box-shadow: 0 10px 40px rgba(0, 243, 255, 0.25);">
                 <h2 class="modal-title" style="color: var(--neon-cyan); text-shadow: var(--cyan-glow);">PLAYER PROFILE</h2>
 
+                <!-- Google Authentication Section -->
+                <div class="glass-panel google-auth-panel" style="margin-bottom: 15px; padding: 12px; display: flex; flex-direction: column; align-items: center; border-color: rgba(255, 255, 255, 0.15); gap: 10px;">
+                    <div id="google-logged-out" style="display: block; width: 100%; text-align: center;">
+                        <button class="settings-btn" style="border-color: #4285F4; background: rgba(66, 133, 244, 0.15); font-weight: bold; width: 100%; justify-content: center;" onclick="window.loginWithGoogle()">
+                            <svg viewBox="0 0 48 48" style="width: 18px; height: 18px; margin-right: 8px;"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24c0-1.61-.15-3.16-.42-4.67H24v8.83h12.62c-.54 2.87-2.17 5.31-4.61 6.95l7.18 5.56C43.37 36.6 46.5 30.85 46.5 24z"/><path fill="#FBBC05" d="M10.54 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.98-6.19z"/><path fill="#34A353" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.18-5.56c-2.03 1.35-4.63 2.18-7.71 2.18-6.26 0-11.57-4.22-13.46-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+                            Sign In with Google
+                        </button>
+                    </div>
+                    <div id="google-logged-in" style="display: none; width: 100%; align-items: center; justify-content: space-between; gap: 10px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <img id="google-user-photo" src="" style="width: 38px; height: 38px; border-radius: 50%; border: 2px solid var(--neon-cyan); box-shadow: 0 0 10px rgba(0, 243, 255, 0.4); object-fit: cover;" alt="Avatar">
+                            <div style="display: flex; flex-direction: column; text-align: left;">
+                                <span id="google-user-name" style="font-size: 14px; font-weight: bold; color: #fff;"></span>
+                                <span id="google-user-email" style="font-size: 11px; color: #a4c4c1;"></span>
+                            </div>
+                        </div>
+                        <button class="settings-btn" style="border-color: var(--neon-pink); padding: 5px 10px; font-size: 11px;" onclick="window.logoutUser()">
+                            Sign Out
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Large Custom Header Card layout -->
                 <div class="profile-header-card">
                     <div class="profile-avatar-large">👤</div>
@@ -413,6 +435,18 @@
     <!-- Core modular game script links -->
     <script src="ui.js"></script>
     <script src="game-engine.js"></script>
+
+    <!-- Firebase v10 Modular SDK via ES Modules & google.js Integration -->
+    <script type="importmap">
+      {
+        "imports": {
+          "firebase/app": "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js",
+          "firebase/auth": "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js",
+          "firebase/firestore": "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"
+        }
+      }
+    </script>
+    <script type="module" src="google.js"></script>
 
     <!-- Small mobile landscape forced orientation watcher -->
     <script>

@@ -44,6 +44,10 @@ const KEYS = {
     PERFECT_RUNS: 'plo_total_perfect_runs'
 };
 
+// Explicitly bind state containers to window scope to enable modular access (e.g. from google.js module)
+window.UI_STATE = UI_STATE;
+window.KEYS = KEYS;
+
 // --- INITIALIZE SYSTEM ---
 function initUI() {
     loadSavedState();
