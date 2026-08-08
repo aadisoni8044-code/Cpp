@@ -84,9 +84,6 @@
                     <button id="pwa-install-btn" class="settings-btn" style="border-color: rgba(255, 170, 0, 0.3); display: none;">
                         <span>📥</span> DOWNLOAD APP
                     </button>
-                    <button id="fullscreen-toggle-btn" class="settings-btn" style="border-color: rgba(0, 243, 255, 0.3);" onclick="toggleFullscreen()">
-                        <span>⛶</span> FULLSCREEN
-                    </button>
                     <button class="settings-btn" style="border-color: rgba(0, 243, 255, 0.3);" onclick="document.getElementById('shop-modal').classList.add('active')">
                         <span>🛒</span> SKIN SHOP
                     </button>
@@ -395,6 +392,20 @@
             <div class="rotate-icon">📱</div>
             <h3 style="font-size: 24px; font-weight: 900; margin-bottom: 10px;">ROTATE DEVICE</h3>
             <p style="color: #a4c4c1; max-width: 280px; font-size: 14px;">plo.io requires landscape mode. Please turn your mobile device sideways to continue racing.</p>
+        </div>
+
+        <!-- MANDATORY FULLSCREEN PROMPT OVERLAY MODAL -->
+        <div id="fullscreen-prompt-modal" class="modal-overlay active" style="z-index: 2000;">
+            <div class="modal-content" style="border-color: var(--neon-cyan); box-shadow: 0 10px 40px rgba(0, 243, 255, 0.25);">
+                <h2 class="modal-title" style="color: var(--neon-cyan); text-shadow: var(--cyan-glow); font-size: 32px; line-height: 1.2;">FULL SCREEN MODE REQUIRED</h2>
+                <div class="modal-subtitle">फ़ुल स्क्रीन मोड चालू करें</div>
+                <p style="color: #a4c4c1; font-size: 15px; margin: 20px 0; line-height: 1.6;">
+                    For the best gameplay experience, please click the button below to enter full screen.
+                </p>
+                <div class="modal-buttons" style="margin-top: 10px;">
+                    <button class="modal-btn primary" style="background: var(--neon-cyan); color: var(--neon-dark); box-shadow: 0 4px 15px rgba(0, 243, 255, 0.25);" onclick="requestMandatoryFullscreen()">Enter Fullscreen</button>
+                </div>
+            </div>
         </div>
 
     </div>

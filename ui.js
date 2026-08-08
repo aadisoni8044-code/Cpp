@@ -536,35 +536,37 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-function toggleFullscreen() {
-    const btn = document.getElementById('fullscreen-toggle-btn');
-    if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen()
-            .then(() => {
-                if (btn) btn.innerHTML = '<span>⛶</span> EXIT FULLSCREEN';
-            })
+function requestMandatoryFullscreen() {
+    const docEl = document.documentElement;
+    const requestFS = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
+    if (requestFS) {
+        requestFS.call(docEl)
             .catch((err) => {
                 console.error(`Error attempting to enable fullscreen: ${err.message}`);
-            });
-    } else {
-        document.exitFullscreen()
-            .then(() => {
-                if (btn) btn.innerHTML = '<span>⛶</span> FULLSCREEN';
-            })
-            .catch((err) => {
-                console.error(`Error attempting to exit fullscreen: ${err.message}`);
             });
     }
 }
 
-// Ensure the button icon stays in sync if exit is triggered by Esc/native gestures
-document.addEventListener('fullscreenchange', () => {
-    const btn = document.getElementById('fullscreen-toggle-btn');
-    if (btn) {
-        if (document.fullscreenElement) {
-            btn.innerHTML = '<span>⛶</span> EXIT FULLSCREEN';
+// Synchronize fullscreen state with the mandatory prompt overlay
+document.addEventListener('fullscreenchange', handleFullscreenChange);
+document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+function handleFullscreenChange() {
+    const isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+    const modal = document.getElementById('fullscreen-prompt-modal');
+    if (modal) {
+        if (isFullscreen) {
+            modal.classList.remove('active');
+            // Resume/Initialize sound context on success
+            initAudioContext();
         } else {
-            btn.innerHTML = '<span>⛶</span> FULLSCREEN';
+            modal.classList.add('active');
+            // If game is playing, pause it automatically
+            if (typeof currentGameState !== 'undefined' && currentGameState === 'playing') {
+                pauseGame();
+            }
         }
     }
-});
+}

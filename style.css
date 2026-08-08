@@ -379,12 +379,6 @@ canvas {
     box-shadow: 0 0 12px rgba(255, 170, 0, 0.4) !important;
 }
 
-#fullscreen-toggle-btn:hover {
-    border-color: var(--neon-cyan) !important;
-    background: rgba(0, 243, 255, 0.15) !important;
-    box-shadow: 0 0 12px rgba(0, 243, 255, 0.4) !important;
-}
-
 .social-links {
     display: flex;
     gap: 12px;

@@ -150,37 +150,17 @@ function isMobileDevice() {
     return checkTouch && (checkUA || window.innerWidth < 1024);
 }
 
-// Fullscreen API implementation on click / touch anywhere on the startscreen
+// setup first interaction to start AudioContext
 function setupInteractionListeners() {
     const startTrigger = () => {
-        // Trigger Fullscreen
-        triggerFullscreen();
-
-        // Setup audio ctx
         initAudioContext();
 
-        // Remove listeners
         document.removeEventListener('click', startTrigger);
         document.removeEventListener('touchstart', startTrigger);
     };
 
     document.addEventListener('click', startTrigger);
     document.addEventListener('touchstart', startTrigger);
-}
-
-function triggerFullscreen() {
-    try {
-        const docEl = document.documentElement;
-        if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-            if (docEl.requestFullscreen) {
-                docEl.requestFullscreen();
-            } else if (docEl.webkitRequestFullscreen) {
-                docEl.webkitRequestFullscreen();
-            }
-        }
-    } catch (e) {
-        console.warn('Fullscreen request bypassed by browser policy / user preference.', e);
-    }
 }
 
 // --- PROCEDURAL BACKGROUND HONEYCOMB ---
